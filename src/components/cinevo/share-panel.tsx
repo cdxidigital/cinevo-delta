@@ -153,7 +153,7 @@ export function SharePanel() {
         ) : null}
         {outgoing.length ? (
           <div className="space-y-2">
-            <p className="font-ui text-xs tracking-[0.18em] text-cine-cyan">SENT</p>
+            <p className="font-ui text-xs font-semibold tracking-[0.1em] text-cine-cyan">SENT</p>
             {outgoing.map((i) => (
               <article key={i.id} className="flex items-center justify-between rounded-lg bg-cine-surface px-3 py-3">
                 <span>
@@ -175,7 +175,7 @@ export function SharePanel() {
         ) : null}
         {incoming.length ? (
           <div className="space-y-2">
-            <p className="font-ui text-xs tracking-[0.18em] text-cine-cyan">SHARED WITH YOU</p>
+            <p className="font-ui text-xs font-semibold tracking-[0.1em] text-cine-cyan">SHARED WITH YOU</p>
             {incoming.map((i) => (
               <article key={i.id} className="flex items-center justify-between gap-3 rounded-lg bg-cine-surface px-3 py-3">
                 <Link to="/s/$token" params={{ token: i.token }} className="min-w-0">

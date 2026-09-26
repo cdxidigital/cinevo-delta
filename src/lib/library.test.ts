@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isVideoFile, parseFilename } from "./library.ts";
-import { applySourceFilter } from "./use-library.ts";
-import type { LibraryTitle } from "./library.ts";
+import { applySourceFilter, isVideoFile, migrateTheme, parseFilename, sourceForTitle } from "./library.ts";
+import type { LibraryTitle, LibSource } from "./library.ts";
 
 test("parseFilename reads title and year", () => {
   assert.equal(parseFilename("Blade Runner (1982).mkv").title, "Blade Runner");
@@ -11,6 +10,14 @@ test("parseFilename reads title and year", () => {
   assert.equal(parseFilename("The.Matrix.1999.1080p.BluRay.x264.mp4").year, "1999");
   assert.equal(isVideoFile("foo.mp4"), true);
   assert.equal(isVideoFile("notes.txt"), false);
+});
+
+test("migrateTheme maps legacy ids", () => {
+  assert.equal(migrateTheme("nova"), "pulse");
+  assert.equal(migrateTheme("iris"), "day");
+  assert.equal(migrateTheme("paper"), "day");
+  assert.equal(migrateTheme("ember"), "ember");
+  assert.equal(migrateTheme("unknown"), "noir");
 });
 
 function stub(id: string, source: LibraryTitle["source"]): LibraryTitle {
@@ -51,4 +58,14 @@ test("applySourceFilter isolates shared catalogs", () => {
     applySourceFilter("plex", local, remote).map((t) => t.id),
     ["p1"],
   );
+});
+
+test("sourceForTitle matches label and kind", () => {
+  const sources: LibSource[] = [
+    { id: "plex-1", kind: "plex", name: "Living Room", selected: true, count: 1 },
+    { id: "jf-1", kind: "jellyfin", name: "james", selected: true, count: 1 },
+  ];
+  assert.equal(sourceForTitle({ source: "plex", sourceLabel: "Living Room" }, sources)?.id, "plex-1");
+  assert.equal(sourceForTitle({ source: "jellyfin", sourceLabel: "james · Movies" }, sources)?.id, "jf-1");
+  assert.equal(sourceForTitle({ source: "folder", sourceLabel: "Living Room" }, sources), undefined);
 });

@@ -10,10 +10,12 @@ import {
   type Title,
 } from "@/lib/catalog";
 import { titleById, useCinevo, type Room, type SourceFilter } from "@/lib/cinevo-store";
-import { askCinevo } from "@/lib/ask-cinevo";
+import { mostPlayed, tasteFrom } from "@/lib/house-tools";
 import { useLibrary } from "@/lib/use-library";
-import { PosterCard, Rail } from "./poster";
+import { Rail, ArtImage, LibraryBoard } from "./poster";
 import { AddLibrary } from "./add-library";
+import { ToolsRoom } from "./tools-room";
+import { BrandKicker } from "./logo";
 
 const SOURCES: [SourceFilter, string][] = [
   ["all", "All"],
@@ -51,13 +53,13 @@ function HeroActions({
   );
 }
 
-function PlatformArc() {
+function PlatformArc({ quiet = false }: { quiet?: boolean }) {
   const setRoom = useCinevo((s) => s.setRoom);
   const setCoreOpen = useCinevo((s) => s.setCoreOpen);
   const cards = [
     {
       title: "Private libraries",
-      copy: "Folders on this computer, Plex on any server you own or share, Jellyfin through Node.",
+      copy: "Folders on this computer, Plex, or Jellyfin. Node for disk paths on another machine.",
       action: "Open",
       onClick: () => setRoom("sidebar"),
     },
@@ -83,13 +85,10 @@ function PlatformArc() {
   return (
     <section className="platform-arc">
       <header>
-        <p className="house-kicker">Your private media OS</p>
-        <h2>
-          Thoughtfully organised.
-          <br />
-          Entirely yours.
-        </h2>
-        <p>CINEVO keeps the libraries you control in one house — folders, Plex, Node — without ads or a public feed.</p>
+        <h2>{quiet ? "Also in this house" : "Start with a library you control."}</h2>
+        {quiet ? null : (
+          <p>Folders, Plex, or Jellyfin. Nothing is added until you choose it. Playback stays on servers you own.</p>
+        )}
       </header>
       <div className="platform-arc__grid">
         {cards.map((card) => (
@@ -114,16 +113,14 @@ export function StageRoom() {
   const shufflePlay = useCinevo((s) => s.shufflePlay);
   const setCoreOpen = useCinevo((s) => s.setCoreOpen);
   const setRoom = useCinevo((s) => s.setRoom);
-  const aiConsent = useCinevo((s) => s.aiConsent);
   const sourceFilter = useCinevo((s) => s.sourceFilter);
   const setSourceFilter = useCinevo((s) => s.setSourceFilter);
   const setMood = useCinevo((s) => s.setMood);
   const sources = useCinevo((s) => s.sources);
+  const plays = useCinevo((s) => s.plays);
+  const collections = useCinevo((s) => s.collections);
   const hydrated = useCinevo((s) => s.hydrated);
   const library = useLibrary();
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [pending, setPending] = useState(false);
 
   const pool = byMood(mood, library);
   const hero = pickFeatured({ mood, progress, tonight, pool: library });
@@ -132,52 +129,36 @@ export function StageRoom() {
     const p = progress[t.id];
     return p != null && p > 0 && p < 100;
   });
-  const added = recentlyAdded(8, pool);
+  const added = recentlyAdded(12, pool);
   const addedIds = new Set(added.map((t) => t.id));
   const myList = library.filter((t) => favorites.includes(t.id));
-  const suggestions = pool.filter((t) => !favorites.includes(t.id) && !addedIds.has(t.id)).slice(0, 8);
-  const moodMeta = MOODS.find((m) => m.id === mood) ?? MOODS[0];
+  const taste = useMemo(() => tasteFrom(library, favorites, progress), [library, favorites, progress]);
+  const suggestions = useMemo(() => {
+    const base = pool.filter((t) => !favorites.includes(t.id) && !addedIds.has(t.id));
+    if (!taste.length) return base.slice(0, 12);
+    const weight = new Map(taste.map((item) => [item.genre, item.count]));
+    const score = (title: Title) =>
+      (title.genres?.length ? title.genres : [title.genre]).reduce((n, genre) => n + (weight.get(genre) ?? 0), 0);
+    return [...base].sort((a, b) => score(b) - score(a)).slice(0, 12);
+  }, [pool, favorites, addedIds, taste]);
+  const played = useMemo(() => mostPlayed(library, plays, 10).map((row) => row.title), [library, plays]);
   const queued = tonight
     .map((id) => titleById(id))
     .filter((t): t is Title => Boolean(t));
-
-  const ask = async () => {
-    if (!question.trim() || pending) return;
-    if (!aiConsent) {
-      setCoreOpen(true, "ai");
-      return;
-    }
-    setPending(true);
-    try {
-      const res = await askCinevo({
-        data: {
-          question,
-          titles: pool.map((t) => ({
-            title: t.title,
-            year: t.year,
-            kind: t.kind,
-            genre: t.genre,
-            rating: t.rating,
-            synopsis: t.synopsis,
-          })),
-        },
-      });
-      if (res.ok) setAnswer(res.text.replace(/\*\*/g, ""));
-      else setAnswer(res.error);
-    } finally {
-      setPending(false);
-    }
-  };
 
   const still = hero?.still || "/stills/hero-theater.jpg";
 
   return (
     <div>
       <section className="house-hero" aria-labelledby="featured-title">
-        <img src={still} alt="" className="house-hero__art" />
+        <ArtImage src={still} fallback="/stills/hero-theater.jpg" className="house-hero__art" />
         <div className="house-hero__shade" />
         <div className="house-hero__copy">
-          <p className="house-kicker">{hero ? "Featured for your night" : "Private by design"}</p>
+          {hero ? (
+            <p className="house-kicker">{hero.kind === "series" ? "Series" : "Film"}</p>
+          ) : (
+            <BrandKicker>Private by design</BrandKicker>
+          )}
           <h1 id="featured-title">{hero ? hero.title : "Your media. Your moment."}</h1>
           {hero ? (
             <>
@@ -196,10 +177,10 @@ export function StageRoom() {
                   </>
                 ) : null}
               </p>
-              <p className="lede">{hero.synopsis}</p>
+              <p className="lede lede--clamp">{hero.synopsis}</p>
               <HeroActions
                 onPlay={() => play(hero.id)}
-                playLabel={heroProgress > 0 && heroProgress < 100 ? "Resume" : "Play now"}
+                playLabel={heroProgress > 0 && heroProgress < 100 ? "Resume" : "Play"}
                 onMore={() => openTitle(hero.id)}
                 extra={
                   <button type="button" onClick={shufflePlay} className="house-btn house-btn--ghost">
@@ -212,7 +193,7 @@ export function StageRoom() {
             <>
               <p className="lede">
                 {hydrated
-                  ? "Start with a folder on this computer, sign in with Plex, or pair Node for Jellyfin. Share catalogs with a CINEVO username — playback stays on the original server."
+                  ? "Connect Plex, Jellyfin, a folder on this computer, or Node. Your titles appear here — nothing is published, and nothing is filled in for you."
                   : "Opening your house…"}
               </p>
               {hydrated ? (
@@ -234,99 +215,57 @@ export function StageRoom() {
       <div className="house-stage">
         {library.length ? (
           <>
-            {sources.length > 1 ? (
-              <div className="house-sources" role="tablist" aria-label="Sources">
-                {SOURCES.map(([id, label]) => (
+            <div className="house-filters">
+              {sources.length > 1 ? (
+                <div className="house-sources" role="tablist" aria-label="Sources">
+                  {SOURCES.map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      role="tab"
+                      aria-selected={sourceFilter === id}
+                      onClick={() => setSourceFilter(id)}
+                      className={sourceFilter === id ? "house-chip is-on" : "house-chip"}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <div className="house-sources" role="tablist" aria-label="Mood">
+                {MOODS.map((m) => (
                   <button
-                    key={id}
+                    key={m.id}
                     type="button"
                     role="tab"
-                    aria-selected={sourceFilter === id}
-                    onClick={() => setSourceFilter(id)}
-                    className={sourceFilter === id ? "house-chip is-on" : "house-chip"}
+                    aria-selected={mood === m.id}
+                    onClick={() => setMood(m.id)}
+                    className={mood === m.id ? "house-chip is-on" : "house-chip"}
                   >
-                    {label}
+                    {m.label}
                   </button>
                 ))}
               </div>
-            ) : null}
-
-            <div className="house-sources" role="tablist" aria-label="Mood">
-              {MOODS.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={mood === m.id}
-                  onClick={() => setMood(m.id)}
-                  className={mood === m.id ? "house-chip is-on" : "house-chip"}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="house-board">
-              <aside className="house-panel">
-                <header>
-                  <span>Tonight</span>
-                  <small className="font-mono text-xs text-cine-faint">{tonight.length}/8</small>
-                </header>
-                {queued.length ? (
-                  <ol className="house-queue">
-                    {queued.map((t, i) => (
-                      <li key={t.id}>
-                        <button type="button" onClick={() => play(t.id)} aria-label={`Play ${t.title}`}>
-                          <span className="house-queue__n">{String(i + 1).padStart(2, "0")}</span>
-                          <img src={t.poster} alt="" />
-                          <span>
-                            <b>{t.title}</b>
-                            <small>
-                              {t.runtime} · {progress[t.id] ?? 0}% watched
-                            </small>
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className="mt-4 px-1 text-sm text-cine-faint">Queue a title from any poster. It stays on this device.</p>
-                )}
-              </aside>
-              <section className="house-spot">
-                <p className="house-kicker">Now browsing</p>
-                <h2>{moodMeta.hint}</h2>
-                <p>Curated from titles already in this library. Nothing is uploaded.</p>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void ask();
-                  }}
-                >
-                  <input
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    maxLength={400}
-                    placeholder="What should I watch tonight?"
-                    aria-label="Ask CINEVO"
-                  />
-                  <button type="submit" disabled={pending} className="house-btn house-btn--play">
-                    {pending ? "Thinking…" : "Ask"}
-                  </button>
-                </form>
-                {answer ? <p className="relative z-10 mt-3 text-sm text-cine-muted">{answer}</p> : null}
-              </section>
             </div>
 
             <div className="house-rails">
-              {continueWatching.length ? <Rail heading="Continue watching" titles={continueWatching} /> : null}
+              {continueWatching.length ? <Rail heading="Continue watching" titles={continueWatching} wide /> : null}
+              {queued.length ? <Rail heading="Up next" titles={queued} wide /> : null}
+              {played.length ? <Rail heading="Most played here" titles={played} /> : null}
               {added.length ? <Rail heading="Recently added" titles={added} /> : null}
-              {suggestions.length ? <Rail heading="You might like" titles={suggestions} /> : null}
+              {suggestions.length ? <Rail heading="For you" titles={suggestions} /> : null}
               {myList.length ? <Rail heading="My List" titles={myList} /> : null}
+              {collections.map((collection) => {
+                const titles = collection.titleIds
+                  .map((id) => library.find((title) => title.id === id))
+                  .filter((title): title is NonNullable<typeof title> => Boolean(title));
+                if (!titles.length) return null;
+                return <Rail key={collection.id} heading={collection.name} titles={titles} />;
+              })}
             </div>
           </>
         ) : null}
-        <PlatformArc />
+        <PlatformArc quiet={library.length > 0} />
       </div>
     </div>
   );
@@ -346,7 +285,7 @@ export function BrowseRoom({ kind: initialKind = "all" }: { kind?: "all" | "movi
   return (
     <div className="house-page">
       <header>
-        <p className="house-kicker">Your library</p>
+        <BrandKicker>CINEVO library</BrandKicker>
         <h1>{heading}</h1>
         <p className="lede">Find something worth disappearing into.</p>
       </header>
@@ -362,26 +301,24 @@ export function BrowseRoom({ kind: initialKind = "all" }: { kind?: "all" | "movi
           </button>
         ))}
       </div>
-      <div className="house-sources mb-8">
-        {genres.map((g) => (
-          <button
-            key={g}
-            type="button"
-            onClick={() => setGenre(g)}
-            className={genre === g ? "house-chip is-on" : "house-chip"}
-          >
-            {g}
-          </button>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {titles.map((t) => (
-          <PosterCard key={t.id} title={t} />
-        ))}
-      </div>
-      {!titles.length ? (
-        <p className="mt-6 text-sm text-cine-faint">No titles yet. Add a folder or sign in with Plex.</p>
+      {genres.length > 1 ? (
+        <div className="house-sources mb-8">
+          {genres.map((g) => (
+            <button
+              key={g}
+              type="button"
+              onClick={() => setGenre(g)}
+              className={genre === g ? "house-chip is-on" : "house-chip"}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
       ) : null}
+      <LibraryBoard
+        titles={titles}
+        empty="No titles yet. Import a library from Plex, Jellyfin, a folder, or Node."
+      />
     </div>
   );
 }
@@ -393,17 +330,18 @@ export function SidebarRoom() {
   return (
     <div className="house-page">
       <header>
-        <p className="house-kicker">Home library</p>
+        <BrandKicker>CINEVO · Add sources</BrandKicker>
         <h1>Add sources</h1>
         <p className="lede">
-          Folders scan in this browser. Sign in with Plex to see every server on your account — home, shared, remote.
-          Jellyfin still pairs through CINEVO Node.
+          Folders scan in this browser. Sign in with Plex or Jellyfin to index and proxy playback. Pair Node for disk
+          paths on another computer.
         </p>
       </header>
       <AddLibrary />
       {yours.length ? (
         <div className="mt-10">
-          <Rail heading="In your library" titles={yours.slice(0, 12)} />
+          <h2 className="rail-heading">In your library</h2>
+          <LibraryBoard titles={yours} />
         </div>
       ) : null}
     </div>
@@ -420,6 +358,8 @@ export function RoomSwitch({ room }: { room: Room }) {
       return <BrowseRoom kind="series" />;
     case "sidebar":
       return <SidebarRoom />;
+    case "tools":
+      return <ToolsRoom />;
     default:
       return <StageRoom />;
   }

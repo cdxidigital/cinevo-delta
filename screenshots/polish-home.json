@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "CINEVO — Your media. Your moment.",
+      "hasCanvas": false,
+      "bodyTextLen": 2593,
+      "bodyTextHash": "82789bd18f9be815e905a90bea5cdd511bebdd8cba988a4ca38ba4029bc5e175",
+      "bodyTextPrefix": "Your library Node Sign in Create account CINEVO YOUR MEDIA. YOUR",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/polish-home.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "CINEVO — Your media. Your moment.",
+      "hasCanvas": false,
+      "bodyTextLen": 2567,
+      "bodyTextHash": "efa5d9315188549ed36ac04fdb39082b23836f7c577d11fecdcd404dd6896a58",
+      "bodyTextPrefix": "Create account CINEVO YOUR MEDIA. YOUR MOMENT. The libraries you",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/polish-home-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/polish-home.json"
+}

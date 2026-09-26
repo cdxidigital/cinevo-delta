@@ -1,11 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { FolderPlus, HardDrive, Trash2 } from "lucide-react";
+import { ArrowLeft, Cable, FolderPlus, HardDrive, Server, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { addNodeConnection, addNodeFolder, importNodeSections, listNodeSections } from "@/lib/node-client";
+import { addNodeFolder } from "@/lib/node-client";
 import { remoteTitle, scanFileList, isVideoFile, playableCount } from "@/lib/library";
+import { enrichLocalStills } from "@/lib/local-stills";
 import { reconnectFolders, saveFolderHandle } from "@/lib/folder-handles";
 import { useCinevo } from "@/lib/cinevo-store";
 import { PlexConnect } from "./plex-connect";
+import { JellyfinConnect } from "./jellyfin-connect";
+
+type Method = "pick" | "plex" | "jellyfin" | "folder" | "node";
+
+const METHODS: { id: Exclude<Method, "pick">; title: string; copy: string; icon: typeof Server }[] = [
+  { id: "plex", title: "Plex", copy: "Sign in and pick servers — home, shared, or remote.", icon: Server },
+  { id: "jellyfin", title: "Jellyfin", copy: "Username and address. Playback is proxied through CINEVO.", icon: HardDrive },
+  { id: "folder", title: "This computer", copy: "Pick a folder in this browser. Names only — files stay here.", icon: FolderPlus },
+  { id: "node", title: "CINEVO Node", copy: "Scan a disk path on the machine that holds the files.", icon: Cable },
+];
 
 export function AddLibrary() {
   const sources = useCinevo((s) => s.sources);
@@ -17,16 +28,10 @@ export function AddLibrary() {
   const nodeToken = useCinevo((s) => s.nodeToken);
   const setCoreOpen = useCinevo((s) => s.setCoreOpen);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [method, setMethod] = useState<Method>("pick");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [folderPath, setFolderPath] = useState("");
-  const [jfUrl, setJfUrl] = useState("http://127.0.0.1:8096");
-  const [jfUser, setJfUser] = useState("");
-  const [jfPass, setJfPass] = useState("");
-  const [sections, setSections] = useState<{ connectionId: string; provider: "plex" | "jellyfin"; items: { key: string; title: string }[] } | null>(
-    null,
-  );
-  const [picked, setPicked] = useState<string[]>([]);
 
   useEffect(() => {
     const onFiles = (event: Event) => {
@@ -53,7 +58,8 @@ export function AddLibrary() {
       selected: true,
       count: titles.length,
     });
-    setMessage(`Indexed ${titles.length} files from ${folder}.`);
+    void enrichLocalStills(titles, Array.from(files));
+    setMessage(`Indexed ${titles.length} files from ${folder}. Cover frames are taken from the files themselves.`);
   };
 
   const onFolder = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,99 +98,34 @@ export function AddLibrary() {
         setMessage(res.error);
         return;
       }
-      const titles = res.titles.map((t, i) =>
-        remoteTitle({
+      const titles = res.titles.map((t, i) => ({
+        ...remoteTitle({
           id: t.id || `node-folder-${i}`,
           title: t.title || "Untitled",
           year: t.year,
           source: "plex",
           sourceLabel: res.name,
-          synopsis: `Scanned from ${res.name} on CINEVO Node.`,
+          synopsis: `Indexed from ${res.name} on CINEVO Node. Playback streams from that computer.`,
           genre: "Home library",
+          path: t.path,
         }),
-      );
-      addRemoteTitles(
-        titles.map((t) => ({
-          ...t,
-          source: "folder",
-          sourceLabel: res.name,
-          genre: "Home library",
-          genres: ["Home library", res.name],
-          synopsis: `Indexed from ${res.name} on CINEVO Node. Playback stays on that computer.`,
-        })),
-        { id: res.id, kind: "folder", name: res.name, path: folderPath.trim(), selected: true, count: res.count },
-      );
-      setFolderPath("");
-      setMessage(`Scanned ${res.count} files on Node.`);
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const connect = async (provider: "jellyfin") => {
-    if (!nodeToken) {
-      setMessage("Pair CINEVO Node first — Jellyfin stays on that computer.");
-      return;
-    }
-    if (!jfUser.trim() || !jfPass) {
-      setMessage("Enter your Jellyfin username and password.");
-      return;
-    }
-    setPending(true);
-    try {
-      const added = await addNodeConnection(nodeUrl, nodeToken, {
-        provider,
-        baseUrl: jfUrl.trim(),
-        username: jfUser.trim(),
-        password: jfPass,
-      });
-      if (!added.ok) {
-        setMessage(added.error);
-        return;
-      }
-      const listed = await listNodeSections(nodeUrl, nodeToken, added.id);
-      if (!listed.ok) {
-        setMessage(listed.error);
-        return;
-      }
-      setSections({ connectionId: added.id, provider, items: listed.sections });
-      setPicked(listed.sections.map((s) => s.key));
-      setMessage(`Connected. Select the sections CINEVO may index.`);
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const importPicked = async () => {
-    if (!sections || !nodeToken) return;
-    setPending(true);
-    try {
-      const res = await importNodeSections(nodeUrl, nodeToken, sections.connectionId, picked);
-      if (!res.ok) {
-        setMessage(res.error);
-        return;
-      }
-      const titles = res.titles.map((t) =>
-        remoteTitle({
-          id: t.id,
-          title: t.title,
-          year: t.year,
-          kind: t.kind === "series" ? "series" : "movie",
-          synopsis: t.synopsis,
-          source: sections.provider,
-          sourceLabel: t.sourceLabel || sections.provider,
-          genre: t.genre,
-        }),
-      );
+        source: "folder" as const,
+        sourceLabel: res.name,
+        genre: "Home library",
+        genres: ["Home library", res.name],
+        path: t.path,
+      }));
       addRemoteTitles(titles, {
-        id: sections.connectionId,
-        kind: sections.provider,
-        name: sections.provider === "plex" ? "Plex" : "Jellyfin",
+        id: res.id,
+        kind: "folder",
+        name: res.name,
+        path: folderPath.trim(),
+        baseUrl: nodeUrl,
         selected: true,
-        count: titles.length,
+        count: res.count,
       });
-      setSections(null);
-      setMessage(`Imported ${titles.length} titles. Playback stays on your server.`);
+      setFolderPath("");
+      setMessage(`Scanned ${res.count} files on Node. Playback streams from that computer.`);
     } finally {
       setPending(false);
     }
@@ -203,113 +144,99 @@ export function AddLibrary() {
         onChange={onFolder}
       />
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <article className="glass rounded-xl p-4">
-          <FolderPlus className="text-cine-cyan" size={20} />
-          <h3 className="mt-3 font-display tracking-widest">Folders</h3>
-          <p className="mt-1 text-sm text-cine-faint">Pick a folder on this computer. We index names only.</p>
-          <button
-            type="button"
-            onClick={() => void pickDirectory()}
-            className="mt-4 h-11 w-full rounded-md bg-cine-cyan font-ui font-bold text-cine-bg"
-          >
-            Select folders
-          </button>
-          <div className="mt-3 flex gap-2">
-            <input
-              value={folderPath}
-              onChange={(e) => setFolderPath(e.target.value)}
-              placeholder="/Movies or D:\\Media"
-              aria-label="Folder path on Node"
-              className="h-11 min-w-0 flex-1 rounded-md border border-cine-border bg-cine-well px-3 font-mono text-sm"
-            />
-            <button
-              type="button"
-              onClick={() => void addPath()}
-              disabled={pending}
-              className="h-11 rounded-md border border-cine-cyan px-3 font-ui font-bold text-cine-cyan"
-            >
-              Scan
-            </button>
+      {method === "pick" ? (
+        <div>
+          <p className="font-ui text-xs font-semibold tracking-[0.1em] text-cine-cyan">IMPORT A LIBRARY</p>
+          <h3 className="mt-2 font-ui text-2xl font-semibold tracking-tight">Choose a source.</h3>
+          <p className="mt-1 text-sm text-cine-faint">Plex and Jellyfin play through CINEVO. Folders stay on this device. Node scans a disk on another machine.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {METHODS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setMethod(item.id);
+                    setMessage("");
+                  }}
+                  className="glass flex min-h-28 flex-col items-start rounded-xl p-4 text-left hover:border-cine-cyan"
+                >
+                  <Icon className="text-cine-cyan" size={20} />
+                  <b className="mt-3 font-ui text-lg font-semibold tracking-tight">{item.title}</b>
+                  <span className="mt-1 text-sm text-cine-faint">{item.copy}</span>
+                </button>
+              );
+            })}
           </div>
-        </article>
-
-        <PlexConnect />
-
-        <article className="glass rounded-xl p-4">
-          <HardDrive className="text-cine-cyan" size={20} />
-          <h3 className="mt-3 font-display tracking-widest">Jellyfin</h3>
-          <p className="mt-1 text-sm text-cine-faint">Username stays local. CINEVO never stores the password in the browser.</p>
-          <input
-            value={jfUrl}
-            onChange={(e) => setJfUrl(e.target.value)}
-            aria-label="Jellyfin server address"
-            className="mt-3 h-11 w-full rounded-md border border-cine-border bg-cine-well px-3 font-mono text-sm"
-          />
-          <input
-            value={jfUser}
-            onChange={(e) => setJfUser(e.target.value)}
-            placeholder="Username"
-            aria-label="Jellyfin username"
-            className="mt-2 h-11 w-full rounded-md border border-cine-border bg-cine-well px-3 font-ui"
-          />
-          <input
-            type="password"
-            value={jfPass}
-            onChange={(e) => setJfPass(e.target.value)}
-            placeholder="Password"
-            aria-label="Jellyfin password"
-            className="mt-2 h-11 w-full rounded-md border border-cine-border bg-cine-well px-3 font-ui"
-          />
-          <button
-            type="button"
-            onClick={() => void connect("jellyfin")}
-            disabled={pending}
-            className="mt-3 h-11 w-full rounded-md border border-cine-cyan font-ui font-bold text-cine-cyan"
-          >
-            Connect Jellyfin
-          </button>
-        </article>
-      </div>
-
-      {!nodeToken ? (
-        <p className="text-sm text-cine-muted">
-          Plex signs in from here. Jellyfin and disk paths need{" "}
-          <Link to="/node" className="text-cine-cyan" onClick={() => setCoreOpen(false)}>
-            a paired CINEVO Node
-          </Link>
-          . Folder pick works in this browser now.
-        </p>
-      ) : null}
-
-      {sections ? (
-        <div className="glass rounded-xl p-4">
-          <p className="font-ui text-xs tracking-[0.18em] text-cine-cyan">SELECT SECTIONS</p>
-          <div className="mt-3 space-y-2">
-            {sections.items.map((s) => (
-              <label key={s.key} className="flex min-h-11 items-center justify-between gap-3 rounded-md bg-cine-well px-3">
-                <span className="font-ui">{s.title}</span>
-                <input
-                  type="checkbox"
-                  className="size-5 accent-cine-cyan"
-                  checked={picked.includes(s.key)}
-                  onChange={(e) =>
-                    setPicked((cur) => (e.target.checked ? [...cur, s.key] : cur.filter((k) => k !== s.key)))
-                  }
-                />
-              </label>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => void importPicked()}
-            disabled={pending || !picked.length}
-            className="mt-4 h-11 rounded-md bg-cine-cyan px-5 font-ui font-bold text-cine-bg"
-          >
-            Add selected to CINEVO
-          </button>
         </div>
-      ) : null}
+      ) : (
+        <div className="space-y-4">
+          <button
+            type="button"
+            onClick={() => {
+              setMethod("pick");
+              setMessage("");
+            }}
+            className="inline-flex h-11 items-center gap-2 font-ui text-sm text-cine-muted hover:text-cine-text"
+          >
+            <ArrowLeft size={16} /> All sources
+          </button>
+          {method === "plex" ? <PlexConnect /> : null}
+          {method === "jellyfin" ? <JellyfinConnect /> : null}
+          {method === "folder" ? (
+            <article className="glass rounded-xl p-4">
+              <FolderPlus className="text-cine-cyan" size={20} />
+              <h3 className="mt-3 font-ui text-lg font-semibold tracking-tight">This computer</h3>
+              <p className="mt-1 text-sm text-cine-faint">Pick a folder here. CINEVO indexes names only — files never leave this browser.</p>
+              <button
+                type="button"
+                onClick={() => void pickDirectory()}
+                className="mt-4 h-11 w-full rounded-md bg-cine-cyan font-ui font-bold text-cine-bg"
+              >
+                Select folders
+              </button>
+            </article>
+          ) : null}
+          {method === "node" ? (
+            <article className="glass rounded-xl p-4">
+              <Cable className="text-cine-cyan" size={20} />
+              <h3 className="mt-3 font-ui text-lg font-semibold tracking-tight">CINEVO Node</h3>
+              <p className="mt-1 text-sm text-cine-faint">
+                Pair Node on the computer that holds the files, then scan a path. Playback streams from that machine.
+              </p>
+              {!nodeToken ? (
+                <p className="mt-3 text-sm text-cine-muted">
+                  Pair first on{" "}
+                  <Link to="/node" className="text-cine-cyan" onClick={() => setCoreOpen(false)}>
+                    the Node page
+                  </Link>
+                  .
+                </p>
+              ) : (
+                <p className="mt-3 text-sm text-cine-cyan">Node is paired on this browser.</p>
+              )}
+              <div className="mt-3 flex gap-2">
+                <input
+                  value={folderPath}
+                  onChange={(e) => setFolderPath(e.target.value)}
+                  placeholder="/Movies or D:\\Media"
+                  aria-label="Folder path on Node"
+                  className="h-11 min-w-0 flex-1 rounded-md border border-cine-border bg-cine-well px-3 font-mono text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => void addPath()}
+                  disabled={pending}
+                  className="h-11 rounded-md border border-cine-cyan px-3 font-ui font-bold text-cine-cyan"
+                >
+                  Scan
+                </button>
+              </div>
+            </article>
+          ) : null}
+        </div>
+      )}
 
       {localTitles.length && playableCount() === 0 ? (
         <div className="glass rounded-xl px-4 py-4">
@@ -336,7 +263,7 @@ export function AddLibrary() {
 
       {sources.length ? (
         <div className="space-y-2">
-          <p className="font-ui text-xs tracking-[0.18em] text-cine-cyan">ACTIVE SOURCES</p>
+          <p className="font-ui text-xs font-semibold tracking-[0.1em] text-cine-cyan">ACTIVE SOURCES</p>
           {sources.map((s) => (
             <div key={s.id} className="glass flex items-center justify-between rounded-xl px-3 py-2">
               <div>
@@ -358,7 +285,7 @@ export function AddLibrary() {
         </div>
       ) : (
         <p className="rounded-xl border border-dashed border-cine-border px-4 py-5 text-sm text-cine-faint">
-          Nothing added yet. Select a folder, sign in with Plex, or pair Node for Jellyfin.
+          Nothing added yet. Import Plex, Jellyfin, a folder, or a Node path.
         </p>
       )}
 

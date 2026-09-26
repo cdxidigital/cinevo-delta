@@ -11,10 +11,18 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as ConnectRouteImport } from './routes/connect'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as NodeRouteImport } from './routes/node'
+import { Route as RemoteRouteImport } from './routes/remote'
+import { Route as ApiRemoteRouteImport } from './routes/api/remote'
+import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
+import { Route as LegalTermsRouteImport } from './routes/legal.terms'
 import { Route as STokenRouteImport } from './routes/s.$token'
+import { Route as ApiArtTicketRouteImport } from './routes/api/art.$ticket'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiStreamTicketRouteImport } from './routes/api/stream.$ticket'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -24,6 +32,16 @@ const IndexRoute = IndexRouteImport.update({
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectRoute = ConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -36,9 +54,34 @@ const NodeRoute = NodeRouteImport.update({
   path: '/node',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RemoteRoute = RemoteRouteImport.update({
+  id: '/remote',
+  path: '/remote',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRemoteRoute = ApiRemoteRouteImport.update({
+  id: '/api/remote',
+  path: '/api/remote',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
+  id: '/legal/privacy',
+  path: '/legal/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalTermsRoute = LegalTermsRouteImport.update({
+  id: '/legal/terms',
+  path: '/legal/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const STokenRoute = STokenRouteImport.update({
   id: '/s/$token',
   path: '/s/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiArtTicketRoute = ApiArtTicketRouteImport.update({
+  id: '/api/art/$ticket',
+  path: '/api/art/$ticket',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -46,48 +89,127 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStreamTicketRoute = ApiStreamTicketRouteImport.update({
+  id: '/api/stream/$ticket',
+  path: '/api/stream/$ticket',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
+  '/connect': typeof ConnectRoute
+  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/node': typeof NodeRoute
+  '/remote': typeof RemoteRoute
+  '/api/remote': typeof ApiRemoteRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/s/$token': typeof STokenRoute
+  '/api/art/$ticket': typeof ApiArtTicketRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/stream/$ticket': typeof ApiStreamTicketRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
+  '/connect': typeof ConnectRoute
+  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/node': typeof NodeRoute
+  '/remote': typeof RemoteRoute
+  '/api/remote': typeof ApiRemoteRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/s/$token': typeof STokenRoute
+  '/api/art/$ticket': typeof ApiArtTicketRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/stream/$ticket': typeof ApiStreamTicketRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRoute
+  '/connect': typeof ConnectRoute
+  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/node': typeof NodeRoute
+  '/remote': typeof RemoteRoute
+  '/api/remote': typeof ApiRemoteRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/s/$token': typeof STokenRoute
+  '/api/art/$ticket': typeof ApiArtTicketRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/stream/$ticket': typeof ApiStreamTicketRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/login' | '/node' | '/s/$token' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/connect'
+    | '/help'
+    | '/login'
+    | '/node'
+    | '/remote'
+    | '/api/remote'
+    | '/legal/privacy'
+    | '/legal/terms'
+    | '/s/$token'
+    | '/api/art/$ticket'
+    | '/api/auth/$'
+    | '/api/stream/$ticket'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app' | '/login' | '/node' | '/s/$token' | '/api/auth/$'
+  to:
+    | '/'
+    | '/app'
+    | '/connect'
+    | '/help'
+    | '/login'
+    | '/node'
+    | '/remote'
+    | '/api/remote'
+    | '/legal/privacy'
+    | '/legal/terms'
+    | '/s/$token'
+    | '/api/art/$ticket'
+    | '/api/auth/$'
+    | '/api/stream/$ticket'
   id:
-    '__root__' | '/' | '/app' | '/login' | '/node' | '/s/$token' | '/api/auth/$'
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/connect'
+    | '/help'
+    | '/login'
+    | '/node'
+    | '/remote'
+    | '/api/remote'
+    | '/legal/privacy'
+    | '/legal/terms'
+    | '/s/$token'
+    | '/api/art/$ticket'
+    | '/api/auth/$'
+    | '/api/stream/$ticket'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRoute
+  ConnectRoute: typeof ConnectRoute
+  HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
   NodeRoute: typeof NodeRoute
+  RemoteRoute: typeof RemoteRoute
+  ApiRemoteRoute: typeof ApiRemoteRoute
+  LegalPrivacyRoute: typeof LegalPrivacyRoute
+  LegalTermsRoute: typeof LegalTermsRoute
   STokenRoute: typeof STokenRoute
+  ApiArtTicketRoute: typeof ApiArtTicketRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiStreamTicketRoute: typeof ApiStreamTicketRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -106,6 +228,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/connect': {
+      id: '/connect'
+      path: '/connect'
+      fullPath: '/connect'
+      preLoaderRoute: typeof ConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -120,11 +256,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/remote': {
+      id: '/remote'
+      path: '/remote'
+      fullPath: '/remote'
+      preLoaderRoute: typeof RemoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/remote': {
+      id: '/api/remote'
+      path: '/api/remote'
+      fullPath: '/api/remote'
+      preLoaderRoute: typeof ApiRemoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/privacy': {
+      id: '/legal/privacy'
+      path: '/legal/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof LegalPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/terms': {
+      id: '/legal/terms'
+      path: '/legal/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof LegalTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$token': {
       id: '/s/$token'
       path: '/s/$token'
       fullPath: '/s/$token'
       preLoaderRoute: typeof STokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/art/$ticket': {
+      id: '/api/art/$ticket'
+      path: '/api/art/$ticket'
+      fullPath: '/api/art/$ticket'
+      preLoaderRoute: typeof ApiArtTicketRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -134,16 +305,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stream/$ticket': {
+      id: '/api/stream/$ticket'
+      path: '/api/stream/$ticket'
+      fullPath: '/api/stream/$ticket'
+      preLoaderRoute: typeof ApiStreamTicketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRoute,
+  ConnectRoute: ConnectRoute,
+  HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
   NodeRoute: NodeRoute,
+  RemoteRoute: RemoteRoute,
+  ApiRemoteRoute: ApiRemoteRoute,
+  LegalPrivacyRoute: LegalPrivacyRoute,
+  LegalTermsRoute: LegalTermsRoute,
   STokenRoute: STokenRoute,
+  ApiArtTicketRoute: ApiArtTicketRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiStreamTicketRoute: ApiStreamTicketRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

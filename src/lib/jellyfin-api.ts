@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { authMiddleware } from "@/lib/auth/middleware";
+import { factsFromJellyfin } from "@/lib/artwork-model";
 
 type JellyfinItem = {
   Id?: string;
@@ -10,6 +12,10 @@ type JellyfinItem = {
   Genres?: string[];
   CommunityRating?: number;
   CollectionType?: string;
+  RunTimeTicks?: number;
+  People?: { Name?: string; Type?: string }[];
+  ImageTags?: { Primary?: string };
+  BackdropImageTags?: string[];
 };
 
 function authHeader(deviceId: string, token?: string) {
@@ -42,6 +48,7 @@ function normalizeBase(url: string) {
 }
 
 export const jellyfinConnect = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator((input: { baseUrl: string; username: string; password: string; clientId: string }) => input)
   .handler(async ({ data }) => {
     const baseUrl = normalizeBase(data.baseUrl);
@@ -75,6 +82,7 @@ export const jellyfinConnect = createServerFn({ method: "POST" })
   });
 
 export const jellyfinListSections = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator((input: { baseUrl: string; token: string; userId: string; clientId: string }) => input)
   .handler(async ({ data }) => {
     const baseUrl = normalizeBase(data.baseUrl);
@@ -105,6 +113,7 @@ export const jellyfinListSections = createServerFn({ method: "POST" })
   });
 
 export const jellyfinImportSections = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator(
     (input: {
       baseUrl: string;
@@ -125,7 +134,13 @@ export const jellyfinImportSections = createServerFn({ method: "POST" })
       kind: "movie" | "series";
       synopsis: string;
       genre: string;
+      genres: string[];
+      runtime: string;
+      rating: number;
+      cast: string[];
+      director: string;
       sourceLabel: string;
+      path: string;
     }[] = [];
     try {
       for (const key of data.sectionKeys.slice(0, 12)) {
@@ -133,7 +148,7 @@ export const jellyfinImportSections = createServerFn({ method: "POST" })
           ParentId: key,
           IncludeItemTypes: "Movie,Series",
           Recursive: "true",
-          Fields: "Overview,Genres,ProductionYear,PremiereDate,CommunityRating",
+          Fields: "Overview,Genres,People,ProductionYear,PremiereDate,CommunityRating,RunTimeTicks,ImageTags,BackdropImageTags",
           Limit: "80",
           SortBy: "DateCreated",
           SortOrder: "Descending",
@@ -146,15 +161,21 @@ export const jellyfinImportSections = createServerFn({ method: "POST" })
         );
         const items = (Array.isArray(body.Items) ? body.Items : []) as JellyfinItem[];
         for (const item of items.slice(0, 80)) {
-          const genres = Array.isArray(item.Genres) ? item.Genres.filter(Boolean) : [];
+          const facts = factsFromJellyfin(item);
           titles.push({
             id: `jellyfin-${item.Id || item.Name}`,
             title: String(item.Name || "Untitled"),
-            year: item.ProductionYear ? String(item.ProductionYear) : String(item.PremiereDate || "").slice(0, 4),
+            year: facts.year || (item.ProductionYear ? String(item.ProductionYear) : ""),
             kind: String(item.Type || "") === "Series" ? "series" : "movie",
-            synopsis: String(item.Overview || ""),
-            genre: genres[0] || "Jellyfin",
+            synopsis: facts.synopsis,
+            genre: facts.genre || "Jellyfin",
+            genres: facts.genres,
+            runtime: facts.runtime,
+            rating: facts.rating,
+            cast: facts.cast,
+            director: facts.director,
             sourceLabel: data.sourceLabel,
+            path: String(item.Id || ""),
           });
         }
       }

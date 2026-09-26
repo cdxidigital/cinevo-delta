@@ -3,18 +3,20 @@ import { useEffect, useState } from "react";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
 import { Logo } from "@/components/cinevo/logo";
 import { claimUsername } from "@/lib/sharing";
+import { appDestination } from "@/lib/app-destination";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) => ({
     mode: search.mode === "up" ? ("up" as const) : ("in" as const),
+    ...appDestination(search),
   }),
   component: Login,
 });
 
 function Login() {
   const nav = useNavigate();
-  const { mode: initial } = Route.useSearch();
+  const { mode: initial, room, core } = Route.useSearch();
   const { user, isPending } = useCurrentUserState();
   const [mode, setMode] = useState<"in" | "up">(initial);
   const [email, setEmail] = useState("");
@@ -27,8 +29,22 @@ function Login() {
     setMode(initial);
   }, [initial]);
 
+  if (isPending) {
+    return (
+      <main className="login-stage">
+        <div className="login-card">
+          <div className="h-8 w-28 animate-pulse rounded bg-cine-surface" />
+          <div className="mt-6 h-10 w-56 animate-pulse rounded bg-cine-surface" />
+          <div className="mt-3 h-4 w-full animate-pulse rounded bg-cine-surface" />
+          <div className="mt-8 h-12 w-full animate-pulse rounded-xl bg-cine-surface" />
+          <div className="mt-2 h-12 w-full animate-pulse rounded-xl bg-cine-surface" />
+        </div>
+      </main>
+    );
+  }
+
   if (!isPending && user && !user.isDevFallback) {
-    return <Navigate to="/app" />;
+    return <Navigate to="/app" search={{ ...(room ? { room } : {}), ...(core ? { core } : {}) }} />;
   }
 
   const afterEmail = async (name: string) => {
@@ -39,7 +55,7 @@ function Login() {
         /* UsernameGate will retry on /app */
       }
     }
-    void nav({ to: "/app" });
+    void nav({ to: "/app", search: { ...(room ? { room } : {}), ...(core ? { core } : {}) } });
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -64,7 +80,7 @@ function Login() {
           setError(err.message || "Email or password did not match.");
           return;
         }
-        void nav({ to: "/app" });
+        void nav({ to: "/app", search: { ...(room ? { room } : {}), ...(core ? { core } : {}) } });
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Sign-in failed.");
@@ -77,14 +93,14 @@ function Login() {
     <main className="login-stage">
       <div className="login-card">
         <Link to="/" className="mb-8 inline-flex">
-          <Logo size="lg" tagline={false} />
+          <Logo size="lg" layout="stacked" />
         </Link>
-        <p className="font-display text-[10px] font-extrabold tracking-[0.22em] text-cine-cyan">PRIVATE CINEMA</p>
-        <h1 className="mt-3 font-display text-4xl font-bold tracking-tight">
+        <p className="font-ui text-xs font-semibold tracking-[0.12em] text-cine-cyan">CINEVO · PRIVATE CINEMA</p>
+        <h1 className="mt-3 font-ui text-4xl font-semibold leading-tight tracking-tight">
           {mode === "up" ? "Create your house." : "Take your seat."}
         </h1>
         <p className="mt-3 text-sm text-cine-muted">
-          A username lets friends share Plex and Jellyfin catalogs with you. Folders still work without an account.
+          A username lets friends share Plex and Jellyfin catalogs with you. Your dashboard stays private until you sign in.
         </p>
 
         {authEnabled ? (
@@ -94,14 +110,18 @@ function Login() {
                 <button
                   key={p.providerId}
                   type="button"
-                  onClick={() => signIn(p.providerId, { callbackURL: "/app" })}
+                  onClick={() =>
+                    signIn(p.providerId, {
+                      callbackURL: `/app${room || core ? `?${new URLSearchParams({ ...(room ? { room } : {}), ...(core ? { core } : {}) }).toString()}` : ""}`,
+                    })
+                  }
                   className="h-12 rounded-xl border border-cine-border bg-cine-elevated font-ui text-sm font-bold hover:border-cine-cyan"
                 >
                   Continue with {p.label}
                 </button>
               ))}
             </div>
-            <p className="my-5 text-center font-ui text-[11px] uppercase tracking-[0.18em] text-cine-faint">or email</p>
+            <p className="my-5 text-center font-ui text-xs font-medium uppercase tracking-[0.12em] text-cine-muted">or email</p>
             <form onSubmit={(e) => void submit(e)} className="grid gap-3">
               {mode === "up" ? (
                 <input

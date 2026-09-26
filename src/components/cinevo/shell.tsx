@@ -1,17 +1,68 @@
-import { Bell, Menu, Search, Settings2, X } from "lucide-react";
+import { Bell, Clapperboard, Home, Library, Menu, Search, Settings2, Tv, Wrench, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { paramFromRoom } from "@/lib/app-destination";
 import { useCinevo, type Room } from "@/lib/cinevo-store";
+import type { LibSource } from "@/lib/library";
+import { isLoopbackUrl } from "@/lib/playback-urls";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
+import { ArtworkSync } from "./artwork-sync";
 import { AuthSlot, UsernameGate } from "./account";
 
-const NAV: { id: Room; label: string }[] = [
-  { id: "stage", label: "Home" },
-  { id: "movies", label: "Movies" },
-  { id: "shows", label: "TV" },
-  { id: "sidebar", label: "Library" },
+const NAV: { id: Room; label: string; icon: typeof Home }[] = [
+  { id: "stage", label: "Home", icon: Home },
+  { id: "movies", label: "Movies", icon: Clapperboard },
+  { id: "shows", label: "TV", icon: Tv },
+  { id: "sidebar", label: "Library", icon: Library },
+  { id: "tools", label: "Tools", icon: Wrench },
 ];
+
+function networkMode(sources: LibSource[], nodeUrl: string, nodeToken: string): "local" | "relay" | "idle" {
+  const relay = sources.some((s) => (s.kind === "plex" || s.kind === "jellyfin") && s.baseUrl && !isLoopbackUrl(s.baseUrl));
+  if (relay) return "relay";
+  const local =
+    sources.some((s) => s.kind === "folder" || isLoopbackUrl(s.baseUrl)) || Boolean(nodeToken && isLoopbackUrl(nodeUrl));
+  return local ? "local" : "idle";
+}
+
+function NetDot({ labeled = false }: { labeled?: boolean }) {
+  const sources = useCinevo((s) => s.sources);
+  const nodeUrl = useCinevo((s) => s.nodeUrl);
+  const nodeToken = useCinevo((s) => s.nodeToken);
+  const mode = networkMode(sources, nodeUrl, nodeToken);
+  const label =
+    mode === "local" ? "On this device" : mode === "relay" ? "Remote server" : "Nothing connected";
+  if (!labeled) return <span className="net-dot" data-mode={mode} title={label} aria-label={label} />;
+  return (
+    <p className="side-status">
+      <span className="net-dot" data-mode={mode} aria-hidden="true" />
+      <span>{label}</span>
+    </p>
+  );
+}
+
+function LibrarySwitch() {
+  const sources = useCinevo((s) => s.sources);
+  const activeSourceId = useCinevo((s) => s.activeSourceId);
+  const setActiveSource = useCinevo((s) => s.setActiveSource);
+  const value = sources.some((source) => source.id === activeSourceId) ? activeSourceId : "all";
+  return (
+    <select
+      className="library-switch"
+      aria-label="Library"
+      value={value}
+      onChange={(e) => setActiveSource(e.target.value)}
+    >
+      <option value="all">{sources.length ? "All libraries" : "No library yet"}</option>
+      {sources.map((source) => (
+        <option key={source.id} value={source.id}>
+          {source.name}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 export function Shell({
   children,
@@ -35,7 +86,11 @@ export function Shell({
   const noticesOpen = useCinevo((s) => s.noticesOpen);
   const selectedId = useCinevo((s) => s.selectedId);
   const playingId = useCinevo((s) => s.playingId);
+  const party = useCinevo((s) => s.party);
+  const endParty = useCinevo((s) => s.endParty);
+  const navigate = useNavigate();
   const [drawer, setDrawer] = useState(false);
+  const [navHidden, setNavHidden] = useState(false);
 
   useEffect(() => {
     if (!NAV.some((item) => item.id === room)) setRoom("stage");
@@ -54,7 +109,8 @@ export function Shell({
     };
   }, [drawer]);
 
-  const overlayOpen = Boolean(searchOpen || settingsOpen || coreOpen || noticesOpen || selectedId || playingId);
+  const overlayOpen = Boolean(searchOpen || settingsOpen || coreOpen || noticesOpen || selectedId);
+  const playing = Boolean(playingId);
   useEffect(() => {
     if (!overlayOpen) return;
     const prev = document.body.style.overflow;
@@ -64,16 +120,83 @@ export function Shell({
     };
   }, [overlayOpen]);
 
+  useEffect(() => {
+    if (overlayOpen || drawer) {
+      setNavHidden(false);
+      return;
+    }
+    if (playing) {
+      setNavHidden(true);
+      return;
+    }
+    let t = window.setTimeout(() => setNavHidden(true), 2800);
+    const poke = () => {
+      setNavHidden(false);
+      window.clearTimeout(t);
+      t = window.setTimeout(() => setNavHidden(true), 2800);
+    };
+    window.addEventListener("mousemove", poke);
+    window.addEventListener("keydown", poke);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("mousemove", poke);
+      window.removeEventListener("keydown", poke);
+    };
+  }, [overlayOpen, drawer, playing]);
+
   const go = (id: Room) => {
     setRoom(id);
     setDrawer(false);
+    const room = paramFromRoom(id);
+    void navigate({
+      to: "/app",
+      search: (prev) => {
+        const next = { ...prev };
+        if (room) next.room = room;
+        else delete next.room;
+        return next;
+      },
+      replace: true,
+    });
   };
 
   return (
     <div className={cn("cinevo-house", night && "cinevo-night", zen && "cinevo-zen")}>
       <div className="house-still" />
       <div className="house-ambient" />
-      <header className="top-nav">
+      <aside className="side-rail">
+        <Link to="/" aria-label="CINEVO home" className="side-rail__brand">
+          <Logo size="sm" tagline={false} />
+        </Link>
+        <nav className="side-rail__nav" aria-label="Main">
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => go(item.id)}
+                className={cn(room === item.id && "is-on")}
+                aria-current={room === item.id ? "page" : undefined}
+              >
+                <Icon size={18} />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="side-rail__foot">
+          <button type="button" onClick={() => setCoreOpen(true)}>
+            Core
+          </button>
+          <button type="button" onClick={() => setSettingsOpen(true)}>
+            <Settings2 size={18} />
+            Settings
+          </button>
+          <NetDot labeled />
+        </div>
+      </aside>
+      <header className={cn("top-nav", navHidden && "is-hidden")}>
         <Link to="/" aria-label="CINEVO home" className="top-nav__brand">
           <Logo size="sm" tagline={false} />
         </Link>
@@ -99,10 +222,20 @@ export function Shell({
           >
             <Menu size={18} />
           </button>
+          <LibrarySwitch />
+          <button type="button" className="house-search" onClick={() => setSearchOpen(true)}>
+            <Search size={16} />
+            <span>Search this library</span>
+          </button>
+          {party ? (
+            <button type="button" className="party-chip" onClick={endParty} title="Ends the note on this screen. Playback is not synced to another device.">
+              With {party.with || "someone"} · End
+            </button>
+          ) : null}
           <button type="button" className="top-nav__core max-md:hidden" onClick={() => setCoreOpen(true)}>
             Core
           </button>
-          <button type="button" aria-label="Search" className="top-nav__icon" onClick={() => setSearchOpen(true)}>
+          <button type="button" aria-label="Search" className="top-nav__icon md:hidden" onClick={() => setSearchOpen(true)}>
             <Search size={18} />
           </button>
           <button
@@ -119,11 +252,14 @@ export function Shell({
           <button
             type="button"
             aria-label="Settings"
-            className="top-nav__icon"
+            className="top-nav__icon md:hidden"
             onClick={() => setSettingsOpen(true)}
           >
             <Settings2 size={18} />
           </button>
+          <span className="md:hidden">
+            <NetDot />
+          </span>
           <AuthSlot className="max-md:hidden" />
         </div>
       </header>
@@ -132,26 +268,43 @@ export function Shell({
         <div className="drawer-scrim md:hidden" onMouseDown={() => setDrawer(false)}>
           <aside className="drawer-panel" onMouseDown={(e) => e.stopPropagation()}>
             <div className="mb-6 flex items-center justify-between">
-              <Logo size="sm" />
+              <Logo size="md" tagline={false} />
               <button type="button" aria-label="Close menu" className="top-nav__icon" onClick={() => setDrawer(false)}>
                 <X size={18} />
               </button>
             </div>
+            {party ? (
+              <button
+                type="button"
+                className="party-chip mb-3"
+                onClick={() => {
+                  endParty();
+                  setDrawer(false);
+                }}
+              >
+                With {party.with || "someone"} · End
+              </button>
+            ) : null}
             <nav className="flex flex-col gap-1" aria-label="Main">
-              {NAV.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => go(item.id)}
-                  className={cn(
-                    "flex h-11 w-full items-center rounded-md px-3 font-ui text-sm font-medium",
-                    room === item.id ? "bg-cine-surface text-cine-text" : "text-cine-muted",
-                  )}
-                  aria-current={room === item.id ? "page" : undefined}
-                >
-                  {item.label}
-                </button>
-              ))}
+              <LibrarySwitch />
+              {NAV.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => go(item.id)}
+                    className={cn(
+                      "flex h-11 w-full items-center gap-2 rounded-md px-3 font-ui text-sm font-medium",
+                      room === item.id ? "bg-cine-surface text-cine-text" : "text-cine-muted",
+                    )}
+                    aria-current={room === item.id ? "page" : undefined}
+                  >
+                    <Icon size={18} />
+                    {item.label}
+                  </button>
+                );
+              })}
               <button
                 type="button"
                 className="flex h-11 w-full items-center rounded-md px-3 font-ui text-sm font-medium text-cine-muted"
@@ -180,7 +333,8 @@ export function Shell({
         </div>
       ) : null}
 
-      <main className={cn("house-main", room !== "stage" && "house-main--page")}>{children}</main>
+      <main key={room} className={cn("house-main", room !== "stage" && "house-main--page")}>{children}</main>
+      <ArtworkSync />
       {overlays}
       <UsernameGate />
     </div>

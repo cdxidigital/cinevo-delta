@@ -13,7 +13,7 @@ export function Rehydrate() {
     }
     void Promise.resolve(useCinevo.persist.rehydrate())
       .then(async () => {
-        const theme = useCinevo.getState().prefs.theme || "pulse";
+        const theme = useCinevo.getState().prefs.theme || "noir";
         document.documentElement.setAttribute("data-theme", theme);
         const restored = await restoreFolderBlobs();
         if (restored) {

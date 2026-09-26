@@ -88,19 +88,19 @@ function NodePairing() {
       <nav className="mx-auto flex max-w-3xl items-center justify-between px-5 py-5">
         <Link to="/" className="inline-flex items-center gap-3 text-cine-muted">
           <ArrowLeft size={18} />
-          <Logo size="md" />
+          <Logo size="md" tagline={false} layout="horizontal" />
         </Link>
-        <span className="font-ui text-xs tracking-[0.22em] text-cine-cyan">PRIVATE COMPANION</span>
+        <span className="font-ui text-xs font-semibold tracking-[0.12em] text-cine-cyan">CINEVO NODE</span>
       </nav>
 
       <main className="relative z-10 mx-auto max-w-6xl px-5 py-12">
         <section className="grid items-center gap-10 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
-            <p className="flex items-center gap-3 font-ui text-xs font-semibold uppercase tracking-[0.28em] text-cine-muted">
+            <p className="flex items-center gap-3 font-ui text-xs font-semibold uppercase tracking-[0.14em] text-cine-muted">
               <img src="/node-icon.png" alt="" className="size-8 rounded-md" />
               CINEVO Node
             </p>
-            <h1 className="mt-3 font-display text-4xl font-extrabold leading-none tracking-tight md:text-6xl">
+            <h1 className="mt-3 font-ui text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
               Your library,
               <br />
               close to home.
@@ -117,7 +117,7 @@ function NodePairing() {
                 <KeyRound size={15} className="text-cine-cyan" /> 10-minute code
               </span>
               <span className="inline-flex items-center gap-2">
-                <Link2 size={15} className="text-cine-cyan" /> No media proxy
+                <Link2 size={15} className="text-cine-cyan" /> Files stay on this computer
               </span>
             </div>
           </div>
@@ -138,7 +138,7 @@ function NodePairing() {
                 <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
               </button>
             </header>
-            <label className="font-ui text-xs tracking-[0.18em] text-cine-faint">LOCAL NODE ADDRESS</label>
+            <label className="font-ui text-xs font-medium tracking-[0.1em] text-cine-muted">LOCAL NODE ADDRESS</label>
             <input
               value={nodeUrl}
               onChange={(e) => setNodeUrl(e.target.value)}
@@ -147,13 +147,13 @@ function NodePairing() {
               autoCorrect="off"
               aria-label="Local Node address"
             />
-            <label className="mt-4 block font-ui text-xs tracking-[0.18em] text-cine-faint">PAIRING CODE</label>
+            <label className="mt-4 block font-ui text-xs font-medium tracking-[0.1em] text-cine-muted">PAIRING CODE</label>
             <input
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               placeholder="ABC-123"
               aria-label="Pairing code"
-              className="mt-2 h-11 w-full rounded-md border border-cine-border bg-cine-well px-3 font-display tracking-[0.2em]"
+              className="mt-2 h-11 w-full rounded-md border border-cine-border bg-cine-well px-3 font-mono text-base tracking-[0.12em]"
               autoCapitalize="characters"
               autoCorrect="off"
             />
@@ -175,8 +175,8 @@ function NodePairing() {
 
         {status ? (
           <section className="mt-14">
-            <p className="font-ui text-xs tracking-[0.22em] text-cine-cyan">LOCAL STATUS</p>
-            <h2 className="font-display mt-1 text-2xl tracking-widest">Connected servers</h2>
+            <p className="font-ui text-xs font-semibold tracking-[0.12em] text-cine-cyan">LOCAL STATUS</p>
+            <h2 className="font-ui mt-1 text-2xl font-semibold tracking-tight">Connected servers</h2>
             <p className="mt-2 max-w-xl text-sm text-cine-muted">
               Only names and addresses. Access tokens never leave Node. Device {status.deviceId}.
             </p>
@@ -210,15 +210,15 @@ function NodePairing() {
         ) : null}
 
         <section className="mt-16">
-          <p className="font-ui text-xs tracking-[0.22em] text-cine-cyan">INSTALLERS</p>
-          <h2 className="font-display mt-1 text-2xl tracking-widest">Windows and Mac nodes</h2>
+          <p className="font-ui text-xs font-semibold tracking-[0.12em] text-cine-cyan">INSTALLERS</p>
+          <h2 className="font-ui mt-1 text-2xl font-semibold tracking-tight">Windows and Mac nodes</h2>
           <p className="mt-2 mb-5 max-w-xl text-sm text-cine-muted">
             Unsigned release candidates. Loopback only. Sign and notarize before a public channel.
           </p>
           <InstallerCards />
         </section>
 
-        <section className="mt-14 grid gap-6 md:grid-cols-3">
+        <section className="flow-grid flow-grid--steps mt-14">
           {[
             ["01", "Start Node", "Open the installer on the computer that already hosts your library."],
             ["02", "Pair once", "Enter the code from the local dashboard. It expires after ten minutes."],
@@ -226,7 +226,7 @@ function NodePairing() {
           ].map(([n, t, d]) => (
             <article key={n} className="rounded-xl border border-cine-border bg-cine-surface p-5">
               <span className="font-mono text-cine-cyan">{n}</span>
-              <h3 className="mt-2 font-display tracking-widest">{t}</h3>
+              <h3 className="mt-2 font-ui text-lg font-semibold tracking-tight">{t}</h3>
               <p className="mt-2 text-sm text-cine-muted">{d}</p>
             </article>
           ))}

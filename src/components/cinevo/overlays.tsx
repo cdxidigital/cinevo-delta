@@ -3,8 +3,9 @@ import { Check, ChevronLeft, ListPlus, Play, Search, Star, X } from "lucide-reac
 import { filterCatalog, similarTo, type Title } from "@/lib/catalog";
 import { libraryPool, titleById, useCinevo } from "@/lib/cinevo-store";
 import { askCinevo } from "@/lib/ask-cinevo";
-import { Rail } from "./poster";
+import { Rail, ArtImage } from "./poster";
 import { InstallerCards } from "./installers";
+import { HouseRemote, InstallCinevo } from "./house-remote";
 import { Link } from "@tanstack/react-router";
 import { THEMES } from "@/lib/library";
 import { SharePanel } from "./share-panel";
@@ -37,7 +38,7 @@ export function Detail() {
   const similar = similarTo(title, libraryPool());
   return (
     <div className="house-detail">
-      <img src={title.still || "/stills/theater.jpg"} alt="" className="house-detail__art" />
+      <ArtImage src={title.still || title.poster} fallback="/stills/theater.jpg" className="house-detail__art" />
       <div className="house-detail__veil" />
       <div className="house-detail__inner">
         <button type="button" onClick={closeTitle} className="house-back">
@@ -112,6 +113,23 @@ export function Detail() {
   );
 }
 
+function SearchThumb({ title }: { title: Title }) {
+  const [broken, setBroken] = useState(!title.poster);
+  useEffect(() => setBroken(!title.poster), [title.poster, title.id]);
+  if (broken) {
+    return (
+      <span className="search-thumb" aria-hidden="true">
+        {title.title.slice(0, 1)}
+      </span>
+    );
+  }
+  return (
+    <span className="search-thumb">
+      <img src={title.poster} alt="" onError={() => setBroken(true)} />
+    </span>
+  );
+}
+
 export function SearchOverlay() {
   const open = useCinevo((s) => s.searchOpen);
   const setSearchOpen = useCinevo((s) => s.setSearchOpen);
@@ -119,16 +137,17 @@ export function SearchOverlay() {
   const [q, setQ] = useState("");
   const extra = useCinevo((s) => s.localTitles);
   const remote = useCinevo((s) => s.remoteTitles);
-  const results = useMemo(
-    () => filterCatalog({ query: q, pool: [...extra, ...remote] }).slice(0, 8),
-    [q, extra, remote],
-  );
+  const results = useMemo(() => {
+    const query = q.trim();
+    if (!query) return [];
+    return filterCatalog({ query, pool: [...extra, ...remote] }).slice(0, 8);
+  }, [q, extra, remote]);
   useEffect(() => {
     if (!open) setQ("");
   }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center bg-cine-bg/80 p-4 pt-20"
+    <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-cine-bg/80 p-4 pt-16"
       onMouseDown={() => setSearchOpen(false)}
     >
       <section
@@ -158,11 +177,13 @@ export function SearchOverlay() {
         <p className="mt-3 font-mono text-xs text-cine-faint">
           {extra.length + remote.length === 0
             ? "Nothing in your library yet."
-            : q.trim() && !results.length
-              ? "No matches."
-              : `${results.length} titles · Enter opens · Esc`}
+            : !q.trim()
+              ? "Type a title, person, or genre."
+              : results.length
+                ? `${results.length} ${results.length === 1 ? "title" : "titles"} · Enter opens · Esc`
+                : "No matches."}
         </p>
-        <div className="mt-2 space-y-1">
+        <div className="search-results">
           {results.map((t) => (
             <button
               key={t.id}
@@ -173,9 +194,9 @@ export function SearchOverlay() {
                 setSearchOpen(false);
               }}
             >
-              <img src={t.poster} alt="" className="h-14 w-10 rounded-sm object-cover" />
-              <span>
-                <b className="block font-ui">{t.title}</b>
+              <SearchThumb title={t} />
+              <span className="min-w-0">
+                <b className="block truncate font-ui">{t.title}</b>
                 <small className="text-cine-faint">
                   {t.year} · {t.genre}
                 </small>
@@ -201,43 +222,49 @@ export function SettingsModal() {
   }, [open]);
   if (!open) return null;
   const rows: { key: "nightMode" | "zenMode" | "focusMode"; label: string; hint: string }[] = [
-    { key: "nightMode", label: "OLED night", hint: "True black surfaces" },
+    { key: "nightMode", label: "Dim the billboard", hint: "Darken featured art. Colors stay with the theme." },
     { key: "zenMode", label: "Zen mode", hint: "Hide poster metadata" },
     { key: "focusMode", label: "Focus player", hint: "Quieter playback chrome" },
   ];
   return (
-    <div className="fixed inset-0 z-40 bg-cine-bg/80 p-4" onMouseDown={() => setSettingsOpen(false)}>
+    <div className="fixed inset-0 z-40 overflow-y-auto bg-cine-bg/80 p-4" onMouseDown={() => setSettingsOpen(false)}>
       <section
         className="glass-strong mx-auto mt-16 max-w-lg rounded-xl p-5"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <header className="mb-4 flex items-start justify-between">
           <div>
-            <p className="font-ui text-xs tracking-[0.22em] text-cine-cyan">LOCAL PREFERENCES</p>
-            <h2 className="font-display text-lg tracking-widest">Settings</h2>
+            <p className="font-ui text-xs font-semibold tracking-[0.12em] text-cine-cyan">LOCAL PREFERENCES</p>
+            <h2 className="font-ui text-lg font-semibold tracking-tight">Settings</h2>
           </div>
           <button type="button" aria-label="Close settings" onClick={() => setSettingsOpen(false)}>
             <X size={18} />
           </button>
         </header>
         <div className="space-y-3">
-          <p className="font-ui text-xs tracking-[0.18em] text-cine-cyan">THEME</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {THEMES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                aria-label={`${t.label} theme`}
-                aria-pressed={prefs.theme === t.id}
-                onClick={() => setTheme(t.id)}
-                className={`flex h-11 flex-col items-center justify-center rounded-md border ${
-                  prefs.theme === t.id ? "border-cine-cyan glow-cyan" : "border-cine-border"
-                }`}
-              >
-                <i className="swatch size-4 rounded-full" data-swatch={t.id} />
-                <span className="font-ui text-xs">{t.label}</span>
-              </button>
-            ))}
+          <p className="font-ui text-xs font-semibold tracking-[0.1em] text-cine-cyan">THEME</p>
+          <div className="theme-grid" role="listbox" aria-label="Theme">
+            {THEMES.map((t) => {
+              const on = prefs.theme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="option"
+                  aria-selected={on}
+                  aria-label={`${t.label} theme`}
+                  onClick={() => setTheme(t.id)}
+                  className={on ? "theme-option is-on" : "theme-option"}
+                >
+                  <i className="swatch" data-swatch={t.id} />
+                  <span>
+                    <b>{t.label}</b>
+                    <small>{t.feel}</small>
+                  </span>
+                  {on ? <Check size={16} /> : null}
+                </button>
+              );
+            })}
           </div>
           {rows.map((row) => (
             <label key={row.key} className="flex items-center justify-between gap-4 rounded-lg bg-cine-surface px-3 py-3">
@@ -253,6 +280,8 @@ export function SettingsModal() {
               />
             </label>
           ))}
+          <HouseRemote />
+          <InstallCinevo />
         </div>
         <div className="mt-6 rounded-lg border border-cine-danger/40 bg-cine-surface px-3 py-3">
           <b className="block font-ui text-sm">Local data</b>
@@ -341,8 +370,8 @@ export function CoreModal() {
       >
         <header className="mb-4 flex items-start justify-between">
           <div>
-            <p className="font-ui text-xs tracking-[0.22em] text-cine-cyan">CINEVO CORE</p>
-            <h2 className="font-display text-xl tracking-widest">Your media. Your rules.</h2>
+            <p className="font-ui text-xs font-semibold tracking-[0.12em] text-cine-cyan">CINEVO CORE</p>
+            <h2 className="font-ui text-xl font-semibold tracking-tight">Your media. Your rules.</h2>
           </div>
           <button type="button" aria-label="Close Core" onClick={() => setCoreOpen(false)}>
             <X size={18} />
@@ -392,7 +421,7 @@ export function CoreModal() {
               Open Library
             </button>
             <div>
-              <p className="font-ui text-xs tracking-[0.18em] text-cine-cyan">NODE INSTALLERS</p>
+              <p className="font-ui text-xs font-semibold tracking-[0.1em] text-cine-cyan">NODE INSTALLERS</p>
               <p className="mt-1 mb-3 text-sm text-cine-muted">
                 Needed for Jellyfin and disk paths on the computer that holds the files. Plex signs in here. Folder pick works in this browser.
               </p>
@@ -500,7 +529,7 @@ export function NoticesOverlay() {
   const setRoom = useCinevo((s) => s.setRoom);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40 bg-cine-bg/80 p-4" onMouseDown={() => setNoticesOpen(false)}>
+    <div className="fixed inset-0 z-40 overflow-y-auto bg-cine-bg/80 p-4" onMouseDown={() => setNoticesOpen(false)}>
       <section
         className="glass-strong mx-auto mt-16 max-w-lg rounded-xl p-5"
         onMouseDown={(e) => e.stopPropagation()}
@@ -510,8 +539,8 @@ export function NoticesOverlay() {
       >
         <header className="mb-4 flex items-start justify-between">
           <div>
-            <p className="font-ui text-xs tracking-[0.22em] text-cine-cyan">HOUSE NOTES</p>
-            <h2 className="font-display text-lg tracking-widest">Notices</h2>
+            <p className="font-ui text-xs font-semibold tracking-[0.12em] text-cine-cyan">HOUSE NOTES</p>
+            <h2 className="font-ui text-lg font-semibold tracking-tight">Notices</h2>
           </div>
           <button type="button" aria-label="Close notices" onClick={() => setNoticesOpen(false)}>
             <X size={18} />

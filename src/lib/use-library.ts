@@ -1,21 +1,27 @@
 import { useMemo } from "react";
-import type { Title } from "./catalog";
-import { useCinevo, type SourceFilter } from "./cinevo-store";
-import type { LibraryTitle } from "./library";
+import { useCinevo } from "./cinevo-store";
+import { applySourceFilter } from "./library";
+import { applyTitlePatch } from "./house-tools";
 
-export function applySourceFilter(
-  filter: SourceFilter,
-  local: LibraryTitle[],
-  remote: LibraryTitle[],
-): Title[] {
-  const all = [...local, ...remote];
-  if (filter === "all") return all;
-  return all.filter((t) => t.source === filter);
-}
+export { applySourceFilter };
 
 export function useLibrary() {
   const local = useCinevo((s) => s.localTitles);
   const remote = useCinevo((s) => s.remoteTitles);
   const filter = useCinevo((s) => s.sourceFilter);
-  return useMemo(() => applySourceFilter(filter, local, remote), [local, remote, filter]);
+  const activeSourceId = useCinevo((s) => s.activeSourceId);
+  const sources = useCinevo((s) => s.sources);
+  const patches = useCinevo((s) => s.patches);
+  return useMemo(() => {
+    let pool = applySourceFilter(filter, local, remote).map((title) => applyTitlePatch(title, patches[title.id]));
+    if (activeSourceId && activeSourceId !== "all") {
+      const source = sources.find((item) => item.id === activeSourceId);
+      if (source) {
+        pool = pool.filter(
+          (title) => title.sourceLabel === source.name || title.sourceLabel?.startsWith(`${source.name} ·`),
+        );
+      }
+    }
+    return pool;
+  }, [local, remote, filter, activeSourceId, sources, patches]);
 }

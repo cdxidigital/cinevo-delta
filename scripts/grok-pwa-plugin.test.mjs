@@ -478,6 +478,18 @@ test("renders the manifest with the per-app name", () => {
   assert.equal(manifest.name, "Wild Race");
   assert.equal(manifest.short_name, "Wild Race");
   assert.equal(manifest.icons[0].src, "/__grok/icon-180.png");
+  assert.equal(manifest.start_url, "/");
+});
+
+test("preview hosts install as the site title", () => {
+  const manifest = JSON.parse(renderWebManifest("localhost:8080"));
+  assert.equal(manifest.name, "CINEVO");
+  assert.equal(manifest.short_name, "CINEVO");
+  assert.equal(manifest.start_url, "/app");
+  assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.icons[0].src, "/__grok/icon-180.png");
+  assert.ok(manifest.icons.some((icon) => icon.sizes === "512x512" && icon.purpose === "any"));
+  assert.ok(manifest.icons.some((icon) => icon.purpose === "maskable"));
 });
 
 // Tripwires: the deployed-app path only works if Nitro scans server/ — an

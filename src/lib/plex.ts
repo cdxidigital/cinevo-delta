@@ -1,3 +1,5 @@
+import { factsFromPlex } from "./artwork-model.ts";
+
 export type PlexConnection = {
   uri: string;
   local: boolean;
@@ -143,15 +145,23 @@ export function parsePlexMetadata(raw: unknown, sourceLabel: string) {
   const meta = container?.Metadata || [];
   return meta.slice(0, 80).map((item) => {
     const m = item as Record<string, unknown>;
-    const genres = Array.isArray(m.Genre) ? m.Genre : [];
-    const genreTag = String((genres[0] as { tag?: string } | undefined)?.tag || "Plex");
+    const facts = factsFromPlex(m, String(m.ratingKey || ""));
+    const genreTag = facts.genre || "Plex";
     return {
       id: `plex-${m.ratingKey || m.guid || m.title}`,
+      ratingKey: String(m.ratingKey || ""),
       title: String(m.title || "Untitled"),
-      year: String(m.year || ""),
-      kind: m.type === "show" ? "series" : "movie",
-      synopsis: String(m.summary || ""),
+      year: String(m.year || facts.year || ""),
+      kind: m.type === "show" ? ("series" as const) : ("movie" as const),
+      synopsis: facts.synopsis || String(m.summary || ""),
       genre: genreTag,
+      genres: facts.genres.length ? facts.genres : [genreTag],
+      runtime: facts.runtime,
+      rating: facts.rating,
+      cast: facts.cast,
+      director: facts.director,
+      posterPath: facts.posterPath,
+      stillPath: facts.stillPath,
       sourceLabel,
     };
   });

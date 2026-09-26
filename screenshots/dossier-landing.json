@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "CINEVO — Your media. Your moment.",
+      "hasCanvas": false,
+      "bodyTextLen": 2614,
+      "bodyTextHash": "75a20cb1ae7f8d455846587ed469173efeb3a2f1f89b2e70315097d8d3f2f2d3",
+      "bodyTextPrefix": "YOUR LIBRARY NODE SIGN IN CREATE ACCOUNT CINEVO YOUR MEDIA. YOUR",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/dossier-landing.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "CINEVO — Your media. Your moment.",
+      "hasCanvas": false,
+      "bodyTextLen": 2588,
+      "bodyTextHash": "ec8d702d3606f22cb7a191c089f337b661d194cd49ec42ffa438a8efab0c6bf2",
+      "bodyTextPrefix": "CREATE ACCOUNT CINEVO YOUR MEDIA. YOUR MOMENT. CINEVO brings the",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/dossier-landing-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/dossier-landing.json"
+}

@@ -10,6 +10,8 @@ export type LibSource = {
   name: string;
   path?: string;
   baseUrl?: string;
+  accessToken?: string;
+  userId?: string;
   selected: boolean;
   count: number;
 };
@@ -166,35 +168,80 @@ export function remoteTitle(input: {
   source: "plex" | "jellyfin" | "shared";
   sourceLabel: string;
   genre?: string;
+  genres?: string[];
+  path?: string;
+  runtime?: string;
+  rating?: number;
+  cast?: string[];
+  director?: string;
+  poster?: string;
+  still?: string;
 }): LibraryTitle {
   const accent: Accent = input.source === "plex" ? "amber" : input.source === "shared" ? "magenta" : "violet";
   const label = input.source === "plex" ? "Plex" : input.source === "jellyfin" ? "Jellyfin" : "Shared";
+  const genres = input.genres?.length ? input.genres : [input.genre || label, input.sourceLabel];
   return {
     id: input.id,
     title: input.title,
     kind: input.kind ?? "movie",
     year: input.year || "—",
-    runtime: "—",
-    genre: input.genre || label,
-    genres: [label, input.sourceLabel],
-    synopsis: input.synopsis || `Indexed from ${input.sourceLabel}. Playback stays on your media server.`,
-    cast: [],
-    director: input.sourceLabel,
-    rating: 0,
+    runtime: input.runtime || "—",
+    genre: input.genre || genres[0] || label,
+    genres,
+    synopsis:
+      input.synopsis ||
+      (input.source === "shared"
+        ? `Indexed from ${input.sourceLabel}. Playback stays on the original server.`
+        : `Indexed from ${input.sourceLabel}. CINEVO can proxy playback from this server.`),
+    cast: input.cast || [],
+    director: input.director || input.sourceLabel,
+    rating: input.rating || 0,
     addedAt: new Date().toISOString().slice(0, 10),
-    poster: makePoster(input.title, accent),
-    still: "/stills/theater.jpg",
+    poster: input.poster || makePoster(input.title, accent),
+    still: input.still || input.poster || "/stills/theater.jpg",
     accent,
     source: input.source,
     sourceLabel: input.sourceLabel,
+    path: input.path,
   };
 }
 
+export function applySourceFilter(
+  filter: "all" | "folder" | "plex" | "jellyfin" | "shared",
+  local: LibraryTitle[],
+  remote: LibraryTitle[],
+) {
+  const all = [...local, ...remote];
+  if (filter === "all") return all;
+  return all.filter((t) => t.source === filter);
+}
+
+export function sourceForTitle(title: { source?: string; sourceLabel?: string }, sources: LibSource[]) {
+  const kind = title.source;
+  const label = title.sourceLabel;
+  if (!kind || !label) return undefined;
+  return sources.find((s) => {
+    if (s.kind !== kind) return false;
+    if (s.name === label) return true;
+    const handle = s.name.replace(/^@/, "");
+    return label.startsWith(`${handle} ·`) || label.startsWith(`${s.name} ·`);
+  });
+}
+
 export const THEMES = [
-  { id: "pulse", label: "Night", accent: "#8B2FFF" },
-  { id: "nova", label: "Cyan", accent: "#55CFFF" },
-  { id: "iris", label: "Paper", accent: "#f7f5fa" },
-  { id: "ember", label: "Pink", accent: "#FF4DA5" },
+  { id: "noir", label: "Noir", feel: "Black and white", accent: "#ffffff" },
+  { id: "pulse", label: "Pulse", feel: "Cyan on black", accent: "#7ee7ff" },
+  { id: "violet", label: "Violet", feel: "Lilac night", accent: "#ddcfff" },
+  { id: "ember", label: "Ember", feel: "Warm lamplight", accent: "#ffd0b8" },
+  { id: "sage", label: "Sage", feel: "Quiet green", accent: "#b6f6d8" },
+  { id: "day", label: "Day", feel: "Paper and ink", accent: "#0c5f72" },
 ] as const;
 
 export type ThemeId = (typeof THEMES)[number]["id"];
+
+export function migrateTheme(id?: string): ThemeId {
+  if (id === "iris" || id === "paper") return "day";
+  if (id === "nova") return "pulse";
+  if (THEMES.some((t) => t.id === id)) return id as ThemeId;
+  return "noir";
+}

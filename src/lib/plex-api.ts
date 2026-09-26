@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { authMiddleware } from "@/lib/auth/middleware";
 import {
   parsePlexMetadata,
   parsePlexResources,
@@ -35,6 +36,7 @@ async function plexJson(url: string, headers: Record<string, string>, ms = 8000,
 }
 
 export const plexStartPin = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator((input: { clientId: string }) => input)
   .handler(async ({ data }) => {
     const clientId = data.clientId.trim();
@@ -56,6 +58,7 @@ export const plexStartPin = createServerFn({ method: "POST" })
   });
 
 export const plexPollPin = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator((input: { clientId: string; pinId: number }) => input)
   .handler(async ({ data }) => {
     try {
@@ -72,6 +75,7 @@ export const plexPollPin = createServerFn({ method: "POST" })
   });
 
 export const plexListServers = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator((input: { clientId: string; token: string }) => input)
   .handler(async ({ data }) => {
     const headers = plexHeaders(data.clientId, data.token);
@@ -93,6 +97,7 @@ export const plexListServers = createServerFn({ method: "POST" })
   });
 
 export const plexOpenServer = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator((input: { clientId: string; token: string; server: PlexServer }) => input)
   .handler(async ({ data }) => {
     const token = data.server.accessToken || data.token;
@@ -121,6 +126,7 @@ export const plexOpenServer = createServerFn({ method: "POST" })
   });
 
 export const plexImportSections = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
   .validator((input: { clientId: string; token: string; uri: string; sourceLabel: string; sectionKeys: string[] }) => input)
   .handler(async ({ data }) => {
     const headers = { ...plexHeaders(data.clientId, data.token), "X-Plex-Token": data.token };

@@ -8,7 +8,7 @@ const os = require("node:os");
 const crypto = require("node:crypto");
 const { exec } = require("node:child_process");
 
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.CINEVO_NODE_PORT || 48184);
 const CODE_TTL_MS = 10 * 60 * 1000;
@@ -103,8 +103,8 @@ function send(res, status, body, extra = {}) {
     "Content-Type": typeof body === "string" ? "text/html; charset=utf-8" : "application/json; charset=utf-8",
     "Cache-Control": "no-store",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Authorization, Content-Type",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Range",
+    "Access-Control-Allow-Methods": "GET, POST, HEAD, OPTIONS",
     "Access-Control-Allow-Private-Network": "true",
     ...extra,
   };
@@ -152,6 +152,90 @@ function requireSession(req, res) {
     return null;
   }
   return session;
+}
+
+function sessionFrom(req, url) {
+  const token = bearer(req) || String(url.searchParams.get("token") || "");
+  const session = token ? state.sessions.get(token) : null;
+  if (!session || session.expires < Date.now()) return null;
+  return session;
+}
+
+function contained(root, target) {
+  const a = path.resolve(root);
+  const b = path.resolve(target);
+  const prefix = a.endsWith(path.sep) ? a : a + path.sep;
+  return b === a || b.startsWith(prefix);
+}
+
+function underScannedFolder(filePath) {
+  return (state.config.folders || []).some((f) => contained(f.path, filePath));
+}
+
+function findPlayPath(id, rawPath) {
+  if (rawPath) {
+    const resolved = path.resolve(String(rawPath));
+    if (underScannedFolder(resolved) && fs.existsSync(resolved) && fs.statSync(resolved).isFile()) return resolved;
+  }
+  if (id) {
+    for (const folder of state.config.folders || []) {
+      const files = [];
+      walkVideos(folder.path, files, 0);
+      const hit = files.find((item) => `node-${hashStr(item.path)}` === id);
+      if (hit) return hit.path;
+    }
+  }
+  return null;
+}
+
+function mimeOf(file) {
+  const ext = path.extname(file).toLowerCase();
+  if (ext === ".mp4" || ext === ".m4v") return "video/mp4";
+  if (ext === ".webm") return "video/webm";
+  if (ext === ".mov") return "video/quicktime";
+  if (ext === ".mkv") return "video/x-matroska";
+  if (ext === ".avi") return "video/x-msvideo";
+  return "application/octet-stream";
+}
+
+function streamFile(req, res, filePath) {
+  const stat = fs.statSync(filePath);
+  const size = stat.size;
+  const extra = {
+    "Content-Type": mimeOf(filePath),
+    "Accept-Ranges": "bytes",
+    "Cache-Control": "no-store",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length",
+  };
+  if (req.method === "HEAD") {
+    res.writeHead(200, { ...extra, "Content-Length": String(size) });
+    res.end();
+    return;
+  }
+  const range = req.headers.range;
+  if (range) {
+    const m = /^bytes=(\d*)-(\d*)$/.exec(range);
+    if (m) {
+      let start = m[1] ? Number(m[1]) : 0;
+      let end = m[2] ? Number(m[2]) : size - 1;
+      if (!Number.isFinite(start) || !Number.isFinite(end) || start >= size || start < 0) {
+        res.writeHead(416, { ...extra, "Content-Range": `bytes */${size}` });
+        res.end();
+        return;
+      }
+      end = Math.min(end, size - 1);
+      res.writeHead(206, {
+        ...extra,
+        "Content-Length": String(end - start + 1),
+        "Content-Range": `bytes ${start}-${end}/${size}`,
+      });
+      fs.createReadStream(filePath, { start, end }).pipe(res);
+      return;
+    }
+  }
+  res.writeHead(200, { ...extra, "Content-Length": String(size) });
+  fs.createReadStream(filePath).pipe(res);
 }
 
 function brandPng() {
@@ -671,6 +755,20 @@ async function handle(req, res) {
     } catch (e) {
       send(res, 502, { error: e.message || "Import failed" });
     }
+    return;
+  }
+
+  if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/v1/play") {
+    if (!sessionFrom(req, url)) {
+      send(res, 401, { error: "The local pairing session expired" });
+      return;
+    }
+    const filePath = findPlayPath(url.searchParams.get("id") || "", url.searchParams.get("path") || "");
+    if (!filePath) {
+      send(res, 404, { error: "That file is not in a scanned Node folder." });
+      return;
+    }
+    streamFile(req, res, filePath);
     return;
   }
 

@@ -82,6 +82,7 @@ test("parses library sections and metadata", () => {
     "Home NAS",
   );
   assert.equal(titles[0].id, "plex-99");
+  assert.equal(titles[0].ratingKey, "99");
   assert.equal(titles[0].genre, "Crime");
   assert.equal(titles[1].kind, "series");
   assert.equal(titles[1].sourceLabel, "Home NAS");

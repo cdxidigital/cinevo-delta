@@ -70,14 +70,14 @@ function SharedInvite() {
     <main className="min-h-screen bg-cine-bg px-5 py-16 text-cine-text">
       <div className="mx-auto max-w-2xl">
         <Link to="/">
-          <Logo size="md" />
+          <Logo size="lg" layout="stacked" />
         </Link>
         {pending ? <p className="mt-10 text-cine-muted">Opening invite…</p> : null}
         {error ? <p className="mt-10 text-cine-danger">{error}</p> : null}
         {pack ? (
           <>
-            <p className="mt-10 font-display text-[10px] font-extrabold tracking-[0.22em] text-cine-cyan">SHARED LIBRARY</p>
-            <h1 className="mt-3 font-display text-4xl font-bold tracking-tight">
+            <p className="mt-10 font-ui text-xs font-semibold tracking-[0.12em] text-cine-cyan">CINEVO · SHARED LIBRARY</p>
+            <h1 className="mt-3 font-ui text-4xl font-semibold leading-tight tracking-tight">
               @{pack.ownerUsername} opened a house for you.
             </h1>
             <p className="mt-4 text-cine-muted">

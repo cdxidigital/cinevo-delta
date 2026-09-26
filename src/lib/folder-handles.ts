@@ -2,6 +2,7 @@ import { isVideoFile, rememberBlob } from "./library";
 
 const DB = "cinevo-fs";
 const STORE = "handles";
+const THUMBS = "thumbs";
 
 type StoredHandle = { handle: FileSystemDirectoryHandle; folderName: string };
 
@@ -20,9 +21,10 @@ async function permission(handle: FileSystemDirectoryHandle, request: boolean) {
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB, 1);
+    const req = indexedDB.open(DB, 2);
     req.onupgradeneeded = () => {
       if (!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE);
+      if (!req.result.objectStoreNames.contains(THUMBS)) req.result.createObjectStore(THUMBS);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -41,6 +43,46 @@ export async function saveFolderHandle(id: string, handle: FileSystemDirectoryHa
   } catch {
     /* private mode / unsupported */
   }
+}
+
+export async function saveThumb(id: string, dataUrl: string) {
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(THUMBS, "readwrite");
+      tx.objectStore(THUMBS).put(dataUrl, id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    /* private mode */
+  }
+}
+
+export async function loadThumbs(ids: string[]) {
+  const out: Record<string, string> = {};
+  if (!ids.length) return out;
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(THUMBS, "readonly");
+      const store = tx.objectStore(THUMBS);
+      let left = ids.length;
+      for (const id of ids) {
+        const req = store.get(id);
+        req.onsuccess = () => {
+          if (typeof req.result === "string" && req.result.startsWith("data:image/")) out[id] = req.result;
+          left -= 1;
+          if (!left) resolve();
+        };
+        req.onerror = () => reject(req.error);
+      }
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    /* ignore */
+  }
+  return out;
 }
 
 export async function deleteFolderHandle(id: string) {

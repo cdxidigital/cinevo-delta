@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { byMood, type Mood, type Title } from "./catalog";
 import type { LibSource, LibraryTitle, ThemeId } from "./library";
 import { THEMES, makePoster } from "./library";
+import type { Collection, Marker, PlayLog, TitlePatch } from "./house-tools";
 import type { PlexServer } from "./plex";
 import {
   DEFAULT_DASHBOARD_WIDGETS,
@@ -10,7 +11,10 @@ import {
   type DashboardWidgetId,
 } from "./dashboard";
 
-export type Room = "stage" | "browse" | "movies" | "shows" | "sidebar";
+export type Room = "stage" | "browse" | "movies" | "shows" | "sidebar" | "tools";
+
+export type LibraryView = "grid" | "list" | "hybrid";
+export type LibrarySort = "title" | "year" | "added";
 
 export type Preferences = {
   nightMode: boolean;
@@ -19,6 +23,10 @@ export type Preferences = {
   audioHints: boolean;
   theme: ThemeId;
   dashboardWidgets: DashboardWidgetId[];
+  introSkip: number;
+  subtitleOffset: number;
+  libraryView: LibraryView;
+  librarySort: LibrarySort;
 };
 
 export type SourceFilter = "all" | "folder" | "plex" | "jellyfin" | "shared";
@@ -93,6 +101,11 @@ type CinevoState = {
   localTitles: LibraryTitle[];
   remoteTitles: LibraryTitle[];
   sourceFilter: SourceFilter;
+  activeSourceId: string;
+  collections: Collection[];
+  markers: Marker[];
+  plays: PlayLog[];
+  patches: Record<string, TitlePatch>;
   setRoom: (room: Room) => void;
   openTitle: (id: string) => void;
   closeTitle: () => void;
@@ -137,6 +150,30 @@ type CinevoState = {
   addRemoteTitles: (titles: LibraryTitle[], source: LibSource) => void;
   removeSource: (id: string) => void;
   setSourceFilter: (filter: SourceFilter) => void;
+  setActiveSource: (id: string) => void;
+  createCollection: (name: string) => void;
+  addToCollection: (collectionId: string, titleId: string) => void;
+  removeFromCollection: (collectionId: string, titleId: string) => void;
+  deleteCollection: (collectionId: string) => void;
+  patchTitle: (id: string, patch: TitlePatch) => void;
+  hideTitle: (id: string) => void;
+  patchArtwork: (
+    items: {
+      id: string;
+      poster?: string;
+      still?: string;
+      synopsis?: string;
+      year?: string;
+      runtime?: string;
+      rating?: number;
+      genre?: string;
+      genres?: string[];
+      cast?: string[];
+      director?: string;
+    }[],
+  ) => void;
+  addMarker: (titleId: string, at: number, label: string) => void;
+  removeMarker: (id: string) => void;
   clearLocalData: () => void;
 };
 
@@ -149,6 +186,10 @@ const DEFAULT_PREFS: Preferences = {
   audioHints: true,
   theme: "pulse",
   dashboardWidgets: [...DEFAULT_DASHBOARD_WIDGETS],
+  introSkip: 0,
+  subtitleOffset: 0,
+  libraryView: "grid",
+  librarySort: "title",
 };
 
 const FRESH: Pick<
@@ -222,6 +263,12 @@ function hydrateInvites(raw: unknown): Invite[] {
   });
 }
 
+function clampNumber(value: unknown, min: number, max: number, fallback: number) {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
 export const useCinevo = create<CinevoState>()(
   persist(
     (set, get) => ({
@@ -241,6 +288,11 @@ export const useCinevo = create<CinevoState>()(
       nodeDevice: "",
       plexClientId: "",
       ...FRESH,
+      activeSourceId: "all",
+      collections: [],
+      markers: [],
+      plays: [],
+      patches: {},
       setRoom: (room) => set({ room, selectedId: null }),
       openTitle: (id) => set({ selectedId: id }),
       closeTitle: () => set({ selectedId: null }),
@@ -251,6 +303,7 @@ export const useCinevo = create<CinevoState>()(
           playing: true,
           selectedId: null,
           progress: p >= 100 ? { ...get().progress, [id]: 0 } : get().progress,
+          plays: [{ id: `play-${Date.now()}`, titleId: id, at: Date.now() }, ...get().plays].slice(0, 200),
         });
       },
       stopPlay: () => set({ playingId: null, playing: false }),
@@ -469,6 +522,7 @@ export const useCinevo = create<CinevoState>()(
           localTitles,
           remoteTitles,
           sourceFilter: sources.length <= 1 ? "all" : get().sourceFilter,
+          activeSourceId: get().activeSourceId === id ? "all" : get().activeSourceId,
           tonight: get().tonight.filter((tid) => keep.has(tid)),
           favorites: get().favorites.filter((tid) => keep.has(tid)),
         });
@@ -479,6 +533,84 @@ export const useCinevo = create<CinevoState>()(
         get().flash("Source removed");
       },
       setSourceFilter: (sourceFilter) => set({ sourceFilter }),
+      setActiveSource: (activeSourceId) => set({ activeSourceId }),
+      createCollection: (name) => {
+        const label = name.trim().slice(0, 40);
+        if (!label) return;
+        set({
+          collections: [...get().collections, { id: `col-${Date.now()}`, name: label, titleIds: [] }],
+        });
+        get().flash(`Collection "${label}" created`);
+      },
+      addToCollection: (collectionId, titleId) => {
+        set({
+          collections: get().collections.map((collection) =>
+            collection.id === collectionId && !collection.titleIds.includes(titleId)
+              ? { ...collection, titleIds: [...collection.titleIds, titleId] }
+              : collection,
+          ),
+        });
+      },
+      removeFromCollection: (collectionId, titleId) => {
+        set({
+          collections: get().collections.map((collection) =>
+            collection.id === collectionId
+              ? { ...collection, titleIds: collection.titleIds.filter((id) => id !== titleId) }
+              : collection,
+          ),
+        });
+      },
+      deleteCollection: (collectionId) => {
+        set({ collections: get().collections.filter((collection) => collection.id !== collectionId) });
+        get().flash("Collection deleted");
+      },
+      patchTitle: (id, patch) => {
+        set({ patches: { ...get().patches, [id]: { ...get().patches[id], ...patch } } });
+        get().flash("Details saved in this house");
+      },
+      hideTitle: (id) => {
+        set({
+          localTitles: get().localTitles.filter((title) => title.id !== id),
+          remoteTitles: get().remoteTitles.filter((title) => title.id !== id),
+          tonight: get().tonight.filter((titleId) => titleId !== id),
+          favorites: get().favorites.filter((titleId) => titleId !== id),
+          collections: get().collections.map((collection) => ({
+            ...collection,
+            titleIds: collection.titleIds.filter((titleId) => titleId !== id),
+          })),
+        });
+        get().flash("Removed from this house. The file was not deleted.");
+      },
+      patchArtwork: (items) => {
+        const apply = <T extends { id: string; path?: string }>(title: T): T => {
+          const patch = items.find((item) => item.id === title.id || item.id === title.path);
+          if (!patch) return title;
+          return {
+            ...title,
+            poster: patch.poster || (title as { poster?: string }).poster,
+            still: patch.still || (title as { still?: string }).still,
+            synopsis: patch.synopsis || (title as { synopsis?: string }).synopsis,
+            year: patch.year || (title as { year?: string }).year,
+            runtime: patch.runtime || (title as { runtime?: string }).runtime,
+            rating: typeof patch.rating === "number" && patch.rating > 0 ? patch.rating : (title as { rating?: number }).rating,
+            genre: patch.genre || (title as { genre?: string }).genre,
+            genres: patch.genres?.length ? patch.genres : (title as { genres?: string[] }).genres,
+            cast: patch.cast?.length ? patch.cast : (title as { cast?: string[] }).cast,
+            director: patch.director || (title as { director?: string }).director,
+          };
+        };
+        set({
+          localTitles: get().localTitles.map(apply),
+          remoteTitles: get().remoteTitles.map(apply),
+        });
+      },
+      addMarker: (titleId, at, label) => {
+        if (!Number.isFinite(at)) return;
+        set({
+          markers: [...get().markers, { id: `mk-${Date.now()}`, titleId, at, label: label.slice(0, 40) }].slice(-80),
+        });
+      },
+      removeMarker: (id) => set({ markers: get().markers.filter((marker) => marker.id !== id) }),
       clearLocalData: () => {
         set({
           ...FRESH,
@@ -491,6 +623,11 @@ export const useCinevo = create<CinevoState>()(
           plexToken: "",
           plexUser: "",
           plexServers: [],
+          activeSourceId: "all",
+          collections: [],
+          markers: [],
+          plays: [],
+          patches: {},
           prefs: { ...get().prefs, theme: get().prefs.theme, dashboardWidgets: [...DEFAULT_DASHBOARD_WIDGETS] },
         });
         try {
@@ -550,12 +687,25 @@ export const useCinevo = create<CinevoState>()(
             (p.sourceFilter === "folder" || p.sourceFilter === "plex" || p.sourceFilter === "jellyfin" || p.sourceFilter === "shared")
               ? p.sourceFilter
               : "all",
+          activeSourceId: typeof p.activeSourceId === "string" ? p.activeSourceId : "all",
+          collections: Array.isArray(p.collections) ? p.collections : [],
+          markers: Array.isArray(p.markers) ? p.markers : [],
+          plays: Array.isArray(p.plays) ? p.plays : [],
+          patches: p.patches && typeof p.patches === "object" ? p.patches : {},
+          room:
+            p.room === "browse" || p.room === "movies" || p.room === "shows" || p.room === "sidebar" || p.room === "tools"
+              ? p.room
+              : "stage",
           prefs: {
             ...DEFAULT_PREFS,
             ...p.prefs,
             theme,
             dashboardWidgets: sanitizeDashboardWidgets(p.prefs?.dashboardWidgets),
             audioHints: p.prefs?.audioHints ?? true,
+            introSkip: clampNumber(p.prefs?.introSkip, 0, 180, 0),
+            subtitleOffset: clampNumber(p.prefs?.subtitleOffset, -15, 15, 0),
+            libraryView: p.prefs?.libraryView === "list" || p.prefs?.libraryView === "hybrid" ? p.prefs.libraryView : "grid",
+            librarySort: p.prefs?.librarySort === "year" || p.prefs?.librarySort === "added" ? p.prefs.librarySort : "title",
           },
         };
       },
@@ -585,6 +735,12 @@ export const useCinevo = create<CinevoState>()(
         })),
         remoteTitles: s.remoteTitles,
         sourceFilter: s.sourceFilter,
+        activeSourceId: s.activeSourceId,
+        collections: s.collections,
+        markers: s.markers,
+        plays: s.plays,
+        patches: s.patches,
+        room: s.room,
       }),
     },
   ),

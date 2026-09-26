@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "CINEVO — Your media. Your moment.",
+      "hasCanvas": false,
+      "bodyTextLen": 2614,
+      "bodyTextHash": "489ce36d2b1a1ab72380bec421dfaf504fd453a78e646befbd4f50739d32cf1b",
+      "bodyTextPrefix": "Your library Node Sign in Create account CINEVO Your media. Your",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/hero-logo.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "CINEVO — Your media. Your moment.",
+      "hasCanvas": false,
+      "bodyTextLen": 2588,
+      "bodyTextHash": "25ed3c1b65d55cb97bbc40691f2c1a256188e608e78a7ace530e82fb7dd9c7b5",
+      "bodyTextPrefix": "Create account CINEVO Your media. Your moment. CINEVO brings the",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/hero-logo-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/hero-logo.json"
+}

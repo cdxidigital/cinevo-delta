@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/login",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "CINEVO — Your media. Your moment.",
+      "hasCanvas": false,
+      "bodyTextLen": 268,
+      "bodyTextHash": "f9b9bf7fafedf79ecc6007e558b762997a7c08c51a65f0e6f7aff66bdeefdd62",
+      "bodyTextPrefix": "CINEVO Your media. Your moment. CINEVO · PRIVATE CINEMA Take you",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/login.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "CINEVO — Your media. Your moment.",
+      "hasCanvas": false,
+      "bodyTextLen": 268,
+      "bodyTextHash": "f9b9bf7fafedf79ecc6007e558b762997a7c08c51a65f0e6f7aff66bdeefdd62",
+      "bodyTextPrefix": "CINEVO Your media. Your moment. CINEVO · PRIVATE CINEMA Take you",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/login-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/login.json"
+}

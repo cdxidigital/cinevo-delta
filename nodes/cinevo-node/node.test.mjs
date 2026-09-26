@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -78,5 +80,37 @@ test("loopback health, pair, and 401 without bearer", async (t) => {
   });
   // First pair already rotated the code; a second pair with the old code must fail.
   assert.equal(pairPlain.status, 401);
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cinevo-node-"));
+  const file = path.join(dir, "Demo.Movie.2024.mp4");
+  fs.writeFileSync(file, Buffer.from("CINEVO-FAKE-MP4-CONTENT-0123456789"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  const added = await fetch(`${base}/v1/folders`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${session.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ path: dir }),
+  });
+  assert.equal(added.status, 200);
+  const listed = await added.json();
+  assert.equal(listed.count, 1);
+  const title = listed.titles[0];
+  assert.ok(title.path);
+
+  const deniedPlay = await fetch(`${base}/v1/play?path=${encodeURIComponent(title.path)}`);
+  assert.equal(deniedPlay.status, 401);
+
+  const play = await fetch(`${base}/v1/play?path=${encodeURIComponent(title.path)}&token=${session.token}`);
+  assert.equal(play.status, 200);
+  assert.equal(play.headers.get("content-type"), "video/mp4");
+  assert.equal(play.headers.get("accept-ranges"), "bytes");
+  const bodyBytes = Buffer.from(await play.arrayBuffer());
+  assert.equal(bodyBytes.toString(), "CINEVO-FAKE-MP4-CONTENT-0123456789");
+
+  const ranged = await fetch(`${base}/v1/play?path=${encodeURIComponent(title.path)}&token=${session.token}`, {
+    headers: { Range: "bytes=0-5" },
+  });
+  assert.equal(ranged.status, 206);
+  assert.equal(Buffer.from(await ranged.arrayBuffer()).toString(), "CINEVO");
 });
 

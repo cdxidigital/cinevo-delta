@@ -15,9 +15,8 @@ var grokOgIdentity = { "site": {
 	"title": "CINEVO",
 	"description": "Your media. Your moment. Private cinema for Plex, Jellyfin, and home folders.",
 	"card": "custom",
-	"color": "1A1A1E",
-	"image": "/og.jpg",
-	"banner": "/x-banner.jpg"
+	"color": "0E0718",
+	"image": "/og.jpg"
 } };
 //#endregion
 //#region scripts/grok-pwa-shared.mjs

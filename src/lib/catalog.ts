@@ -26,7 +26,11 @@ export type Title = {
 export const CATALOG: Title[] = [];
 
 export function genresIn(pool: Title[]) {
-  return ["All", ...Array.from(new Set(pool.flatMap((t) => t.genres))).sort()];
+  const names = pool
+    .flatMap((t) => t.genres ?? [])
+    .map((g) => (typeof g === "string" ? g.trim() : ""))
+    .filter((g) => g.length > 0 && g !== "All");
+  return ["All", ...Array.from(new Set(names)).sort((a, b) => a.localeCompare(b))];
 }
 
 export const GENRES = ["All"];

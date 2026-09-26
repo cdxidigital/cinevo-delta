@@ -31,22 +31,26 @@ export function AuthSlot({ className }: { className?: string }) {
 
 export function LandingAuth() {
   const { user, isPending } = useCurrentUserState();
-  if (isPending) return <div className="size-9 animate-pulse rounded-full bg-cine-surface" />;
-  if (user) {
+  if (isPending || !user) {
     return (
-      <div className="cinevo-account">
-        <UserButton />
+      <div className="flex items-center gap-2">
+        <Link to="/login" search={{ mode: "in" }} className="public-nav__signin max-md:hidden">
+          Sign in
+        </Link>
+        <Link to="/login" search={{ mode: "up" }} className="public-nav__enter">
+          Create account
+        </Link>
       </div>
     );
   }
   return (
     <div className="flex items-center gap-2">
-      <Link to="/login" search={{ mode: "in" }} className="public-nav__signin max-md:hidden">
-        Sign in
+      <Link to="/app" className="public-nav__enter">
+        Enter house
       </Link>
-      <Link to="/login" search={{ mode: "up" }} className="public-nav__enter">
-        Create account
-      </Link>
+      <div className="cinevo-account max-md:hidden">
+        <UserButton />
+      </div>
     </div>
   );
 }
@@ -60,11 +64,22 @@ export function UsernameGate() {
 
   useEffect(() => {
     if (isPending || !user || user.isDevFallback) return;
-    void getMyProfile()
-      .then((res) => {
-        if (res.ok && !res.profile) setNeeded(true);
-      })
-      .catch(() => undefined);
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const res = await getMyProfile();
+        if (cancelled) return;
+        setNeeded(Boolean(res.ok && !res.profile));
+      } catch {
+        /* session still settling */
+      }
+    };
+    void check();
+    const retry = window.setTimeout(() => void check(), 900);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(retry);
+    };
   }, [isPending, user]);
 
   if (!needed) return null;
@@ -82,7 +97,7 @@ export function UsernameGate() {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] grid place-items-center bg-cine-bg/80 p-4">
+    <div className="gate-stage fixed inset-0 z-[70] bg-cine-bg/80 p-4">
       <form
         className="glass-strong w-full max-w-md rounded-2xl p-6"
         onSubmit={(e) => {
@@ -90,8 +105,8 @@ export function UsernameGate() {
           void save();
         }}
       >
-        <p className="font-display text-[10px] font-extrabold tracking-[0.22em] text-cine-cyan">USERNAME</p>
-        <h2 className="mt-2 font-display text-2xl font-bold tracking-tight">Claim your CINEVO name.</h2>
+        <p className="font-ui text-xs font-semibold tracking-[0.12em] text-cine-cyan">USERNAME</p>
+        <h2 className="mt-2 font-ui text-2xl font-semibold leading-tight tracking-tight">Claim your CINEVO name.</h2>
         <p className="mt-2 text-sm text-cine-muted">
           Friends share Plex and Jellyfin catalogs with this handle. Playback stays on the original server.
         </p>

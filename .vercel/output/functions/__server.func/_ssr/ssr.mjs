@@ -1,11 +1,12 @@
-import { r as __exportAll$1 } from "../_runtime.mjs";
+import { r as __exportAll } from "../_runtime.mjs";
+import { t as __exportAll$1 } from "./rolldown-runtime-D7D4PA-g.mjs";
 import { A as _getRenderedMatches, B as isNotFound, D as getStylesheetHref, E as getScriptPreloadAttrs, F as isRedirect, I as isResolvedRedirect, L as parseRedirect, M as invariant, O as resolveManifestAssetLink, V as require_react, a as isSsrResponse, c as stripSsrResponseBody, d as RouterProvider, i as disposeSsrResponseDetached, j as executeRewriteInput, k as resolveManifestCssLink, n as bindSsrResponseToRequest, o as normalizeSsrResponse, r as defineHandlerCallback, s as replaceSsrResponse, t as renderRouterToStream, x as require_jsx_runtime, z as rootRouteId } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as createMemoryHistory } from "../_libs/tanstack__history.mjs";
 import { a as getOrigin, c as createSerializationAdapter, d as toCrossJSONAsync, f as toCrossJSONStream, i as getNormalizedURL, l as makeSerovalPlugin, n as mergeHeaders, o as defaultSerovalPlugins, r as attachRouterServerSsrUtils, s as createRawStreamRPCPlugin, t as waitForRequest, u as fromJSON } from "../_libs/@tanstack/router-core+[...].mjs";
 import { n as setCookie, r as toResponse, t as H3Event } from "../_libs/h3-v2+rou3.mjs";
 import { AsyncLocalStorage } from "node:async_hooks";
 //#region node_modules/.nitro/vite/services/ssr/index.js
-var ssr_exports = /* @__PURE__ */ __exportAll$1({
+var ssr_exports = /* @__PURE__ */ __exportAll({
 	a: () => getServerFnById,
 	createServerEntry: () => createServerEntry,
 	default: () => server_default,
@@ -13,21 +14,10 @@ var ssr_exports = /* @__PURE__ */ __exportAll$1({
 	n: () => createMiddleware,
 	o: () => getRequest,
 	r: () => createServerFn,
-	s: () => __exportAll,
 	t: () => server_exports
 });
 require_react();
 var import_jsx_runtime = require_jsx_runtime();
-var __defProp = Object.defineProperty;
-var __exportAll = (all, no_symbols) => {
-	let target = {};
-	for (var name in all) __defProp(target, name, {
-		get: all[name],
-		enumerable: true
-	});
-	if (!no_symbols) __defProp(target, Symbol.toStringTag, { value: "Module" });
-	return target;
-};
 function StartServer(props) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RouterProvider, { router: props.router });
 }
@@ -116,7 +106,7 @@ var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-yw5KmW1A.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-CeSJlMv9.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -136,61 +126,85 @@ async function getStartManifest(matchedRoutes) {
 	};
 }
 var manifest = {
+	"0abf443269b5766502610cfd9a54a85d258dbfca038b894bdd12f186b2e3fca7": {
+		functionName: "jellyfinImportSections_createServerFn_handler",
+		importer: () => import("./jellyfin-api-C4HFikHE.mjs")
+	},
 	"13efa651e638069cac1f159f51b3c7c2b18d85d5124730adcd04341390d3eb29": {
 		functionName: "openShare_createServerFn_handler",
-		importer: () => import("./sharing-CkA4eucN.mjs")
+		importer: () => import("./sharing-Bk-4Vx_4.mjs")
+	},
+	"285ba666976a3441837695ddd867727ae066a2557f7d04def4368d428fa219cc": {
+		functionName: "issuePlayback_createServerFn_handler",
+		importer: () => import("./playback-Do6GnQLb.mjs")
+	},
+	"2c4985e96c199268f7f639534cb5e8e31d6b19d43286bf77416413db60ffde26": {
+		functionName: "fetchSessionUser_createServerFn_handler",
+		importer: () => import("../__root-D0gAQ0nb.mjs")
 	},
 	"319831f9a0af4c9103bf2458ab04d2536541d51dcf0f07e47fa151922a056284": {
 		functionName: "setShareStatus_createServerFn_handler",
-		importer: () => import("./sharing-CkA4eucN.mjs")
+		importer: () => import("./sharing-Bk-4Vx_4.mjs")
 	},
 	"3b4bb4c4449e4f7cbed728d66d982ae6de5dcd43acca1136797adc964162c2ee": {
 		functionName: "plexOpenServer_createServerFn_handler",
-		importer: () => import("./plex-api-BsAndMkF.mjs")
+		importer: () => import("./plex-api-BhUdjgVx.mjs")
+	},
+	"4bf247dd5cb2e1f33ca4eb67235838f6f199965b4aef17e3451f0e92425689b6": {
+		functionName: "jellyfinConnect_createServerFn_handler",
+		importer: () => import("./jellyfin-api-C4HFikHE.mjs")
 	},
 	"548da63b383aa8cc09c51a5899533646c52f4c68cb8c2ef2e2c9cccaa1c52f95": {
 		functionName: "listMyShares_createServerFn_handler",
-		importer: () => import("./sharing-CkA4eucN.mjs")
+		importer: () => import("./sharing-Bk-4Vx_4.mjs")
 	},
 	"7ebb63b2bc6bc267a35ed0fda7ece5b3241b752253db5bd836ae7020e8c799f4": {
 		functionName: "askCinevo_createServerFn_handler",
-		importer: () => import("./ask-cinevo-DYjN56jL.mjs")
+		importer: () => import("./ask-cinevo-5Xndu9Ll.mjs")
 	},
 	"8fdebd237b20b8988d4b74313d86857020fb83c844c4c09a52255338ac0a62c2": {
 		functionName: "plexStartPin_createServerFn_handler",
-		importer: () => import("./plex-api-BsAndMkF.mjs")
+		importer: () => import("./plex-api-BhUdjgVx.mjs")
 	},
 	"a2c3c4f890996a4f965cfe90be75b904e1ef7c0d41c7a73da07e74c8d6682ac0": {
 		functionName: "plexImportSections_createServerFn_handler",
-		importer: () => import("./plex-api-BsAndMkF.mjs")
+		importer: () => import("./plex-api-BhUdjgVx.mjs")
 	},
 	"b1a629896a5a292418e73f888427598ab0a902c8f963c938f2e4cd8a5ed40586": {
 		functionName: "plexPollPin_createServerFn_handler",
-		importer: () => import("./plex-api-BsAndMkF.mjs")
+		importer: () => import("./plex-api-BhUdjgVx.mjs")
+	},
+	"b670e38f35357464eddb77d89fbbffb163995da493c86e56e6512e69a50dc1d3": {
+		functionName: "refreshLibraryArt_createServerFn_handler",
+		importer: () => import("./artwork-DEx-RC9P.mjs")
 	},
 	"c7ceec7cc6bf5575eac80724623fad4deb5b4ab2d639cf98ac11a39677e3aae0": {
 		functionName: "lookupUsername_createServerFn_handler",
-		importer: () => import("./sharing-CkA4eucN.mjs")
+		importer: () => import("./sharing-Bk-4Vx_4.mjs")
 	},
 	"d429d5e0c291120cfe1a14773f50a5c733edabfa4a01a292303538ee81e25668": {
 		functionName: "createShare_createServerFn_handler",
-		importer: () => import("./sharing-CkA4eucN.mjs")
+		importer: () => import("./sharing-Bk-4Vx_4.mjs")
+	},
+	"dda083ec9095a7d394310833eab3e2463ffca531929809b6071a9f5ead98e1c7": {
+		functionName: "jellyfinListSections_createServerFn_handler",
+		importer: () => import("./jellyfin-api-C4HFikHE.mjs")
 	},
 	"debfda2e105582d9114e12506bb512408a0400e2edcc3ba5b30ed4bed7eb8698": {
 		functionName: "bumpWatch_createServerFn_handler",
-		importer: () => import("./sharing-CkA4eucN.mjs")
+		importer: () => import("./sharing-Bk-4Vx_4.mjs")
 	},
 	"e89ce23a72f695aa6514163b0d0ccdfd8b7c4ecff4d273bc467ecade4fbacdf0": {
 		functionName: "getMyProfile_createServerFn_handler",
-		importer: () => import("./sharing-CkA4eucN.mjs")
+		importer: () => import("./sharing-Bk-4Vx_4.mjs")
 	},
 	"f742f8d7a30fe6eb49996cb6b0306b8201fa2f0d7399acc54c534c063424a525": {
 		functionName: "claimUsername_createServerFn_handler",
-		importer: () => import("./sharing-CkA4eucN.mjs")
+		importer: () => import("./sharing-Bk-4Vx_4.mjs")
 	},
 	"fe32bd140d3583c344ef891531d16c93349abb6d1e02a5fadc3e79e692953852": {
 		functionName: "plexListServers_createServerFn_handler",
-		importer: () => import("./plex-api-BsAndMkF.mjs")
+		importer: () => import("./plex-api-BhUdjgVx.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -1460,7 +1474,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-BkDaL0Fq.mjs").then((n) => n.t),
+		import("./router-DvKHbKkc.mjs").then((n) => n.t),
 		import("./start-5Z2QO8AU.mjs"),
 		import("./empty-plugin-adapters-D9UWiqvJ.mjs")
 	]);
@@ -1898,7 +1912,7 @@ async function handleServerRoutes({ getRouter, request, url, executeRouter, cont
 	}
 	return normalizeSsrResponse(response);
 }
-var server_exports = /* @__PURE__ */ __exportAll({ setCookie: () => setCookie$1 });
+var server_exports = /* @__PURE__ */ __exportAll$1({ setCookie: () => setCookie$1 });
 var fetch = createStartHandler(defaultStreamHandler);
 function createServerEntry(entry) {
 	return { async fetch(...args) {
@@ -1907,4 +1921,4 @@ function createServerEntry(entry) {
 }
 var server_default = createServerEntry({ fetch });
 //#endregion
-export { getServerFnById as a, ssr_exports as c, createServerEntry, server_default as default, TSS_SERVER_FUNCTION as i, createMiddleware as n, getRequest as o, createServerFn as r, __exportAll as s, server_exports as t };
+export { getServerFnById as a, createServerEntry, server_default as default, TSS_SERVER_FUNCTION as i, createMiddleware as n, getRequest as o, createServerFn as r, ssr_exports as s, server_exports as t };

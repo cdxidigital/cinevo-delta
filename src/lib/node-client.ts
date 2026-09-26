@@ -136,6 +136,12 @@ export async function listNodeFolders(base: string, token: string) {
   return { ok: true as const, folders: (data.folders as Array<{ id: string; path: string; name: string; count: number }>) || [] };
 }
 
+export function nodePlayUrl(base: string, token: string, filePath: string, id?: string) {
+  const params = new URLSearchParams({ token, path: filePath });
+  if (id) params.set("id", id);
+  return `${base.replace(/\/$/, "")}/v1/play?${params.toString()}`;
+}
+
 export const INSTALLERS = [
   {
     id: "win",
@@ -159,4 +165,3 @@ export const INSTALLERS = [
     hint: "CINEVO icon · drag to Applications",
   },
 ];
-

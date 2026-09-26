@@ -152,6 +152,12 @@ export function PlexConnect() {
           source: "plex",
           sourceLabel: opened.server.name,
           genre: t.genre,
+          genres: t.genres,
+          runtime: t.runtime,
+          rating: t.rating,
+          cast: t.cast,
+          director: t.director,
+          path: t.ratingKey || t.id.replace(/^plex-/, ""),
         }),
       );
       addRemoteTitles(titles, {
@@ -159,11 +165,12 @@ export function PlexConnect() {
         kind: "plex",
         name: opened.server.name,
         baseUrl: opened.uri,
+        accessToken: token,
         selected: true,
         count: titles.length,
       });
       setOpened(null);
-      setMessage(`Imported ${titles.length} titles from ${opened.server.name}. Playback stays on Plex.`);
+      setMessage(`Imported ${titles.length} titles from ${opened.server.name}. CINEVO will proxy playback.`);
     } finally {
       setPending(false);
     }
@@ -195,7 +202,7 @@ export function PlexConnect() {
   return (
     <article className="glass rounded-xl p-4">
       <Server className="text-cine-cyan" size={20} />
-      <h3 className="mt-3 font-display tracking-widest">Plex</h3>
+      <h3 className="mt-3 font-ui text-lg font-semibold tracking-tight">Plex</h3>
       <p className="mt-1 text-sm text-cine-faint">
         Sign in with Plex to see every server on the account — home, shared, remote. Away from home, Plex Remote Access must be on.
       </p>
@@ -240,8 +247,8 @@ export function PlexConnect() {
 
       {pin ? (
         <div className="mt-3 rounded-md bg-cine-well px-3 py-3">
-          <p className="font-ui text-[11px] uppercase tracking-[0.22em] text-cine-muted">Plex pin</p>
-          <p className="mt-1 font-display text-3xl font-extrabold tracking-[0.18em]">{pin.code}</p>
+          <p className="font-ui text-xs font-medium uppercase tracking-[0.1em] text-cine-muted">Plex pin</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tracking-[0.12em]">{pin.code}</p>
           <p className="mt-2 text-sm text-cine-faint">
             Approve CINEVO at{" "}
             <a className="text-cine-cyan" href={plexAuthUrl(clientId(), pin.code)} target="_blank" rel="noreferrer">
@@ -267,7 +274,7 @@ export function PlexConnect() {
 
       {opened ? (
         <div className="mt-4 rounded-md bg-cine-well p-3">
-          <p className="font-ui text-[11px] uppercase tracking-[0.18em] text-cine-cyan">
+          <p className="font-ui text-xs font-medium uppercase tracking-[0.1em] text-cine-cyan">
             {opened.server.name} · {opened.kind}
           </p>
           <div className="mt-3 space-y-2">
@@ -350,7 +357,7 @@ function ServerGroup({
 }) {
   return (
     <div>
-      <p className="font-ui text-[11px] uppercase tracking-[0.18em] text-cine-muted">{heading}</p>
+      <p className="font-ui text-xs font-medium uppercase tracking-[0.1em] text-cine-muted">{heading}</p>
       <ul className="mt-2 space-y-2">
         {servers.map((server) => {
           const kinds = [...new Set(server.connections.map((c) => connectionKind(c)))];
