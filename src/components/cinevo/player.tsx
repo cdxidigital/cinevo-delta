@@ -7,6 +7,7 @@ import { bumpWatch } from "@/lib/sharing";
 import { useCurrentUser } from "@/lib/auth/use-current-user";
 import type { RemoteCommand } from "@/lib/remote-protocol";
 import { issuePlayback } from "@/lib/playback";
+import type { PlaybackFit } from "@/lib/playback-urls";
 import { nodePlayUrl } from "@/lib/node-client";
 import { isLoopbackUrl } from "@/lib/playback-urls";
 import { BrandWatermark } from "./logo";
@@ -101,6 +102,12 @@ export function Player() {
   const [remoteErr, setRemoteErr] = useState("");
   const [remotePending, setRemotePending] = useState(false);
   const [playbackFailed, setPlaybackFailed] = useState(false);
+  const [fit, setFit] = useState<PlaybackFit>("original");
+  const [fitTitle, setFitTitle] = useState<string | null | undefined>(playingId);
+  if (fitTitle !== playingId) {
+    setFitTitle(playingId);
+    setFit("original");
+  }
   const blob = title ? mediaUrl(title.id) : undefined;
   const file = playbackFailed ? undefined : blob || remoteSrc;
   const cueBase = useRef(new WeakMap<TextTrackCue, { start: number; end: number }>());
@@ -120,9 +127,15 @@ export function Player() {
     const source =
       sourceForTitle(title, sources) ||
       sources.find((item) => item.kind === title.source && item.baseUrl && (item.accessToken || item.kind === "folder"));
-    const openProxy = (provider: "plex" | "jellyfin" | "node", uri: string, key: string, token: string, clientId?: string) => {
+    const openProxy = (
+      provider: "plex" | "jellyfin" | "node",
+      uri: string,
+      key: string,
+      token: string,
+      clientId?: string,
+    ) => {
       setRemotePending(true);
-      void issuePlayback({ data: { provider, uri, key, token, clientId } })
+      void issuePlayback({ data: { provider, uri, key, token, clientId, fit: provider === "node" ? "original" : fit } })
         .then((res) => {
           if (cancelled) return;
           if (res.ok) setRemoteSrc(res.src);
@@ -152,7 +165,7 @@ export function Player() {
     return () => {
       cancelled = true;
     };
-  }, [title?.id, title?.path, title?.source, title?.sourceLabel, nodeToken, nodeUrl, plexClient, sources]);
+  }, [title?.id, title?.path, title?.source, title?.sourceLabel, nodeToken, nodeUrl, plexClient, sources, fit]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -325,7 +338,9 @@ export function Player() {
   if (!title) return null;
 
   const missing = remotePending
-    ? "Opening a private stream through CINEVO…"
+    ? fit === "compatible"
+      ? "This file will not play as-is. Asking your server for a browser-friendly copy…"
+      : "Opening a private stream through CINEVO…"
     : remoteErr
       ? remoteErr
       : title.source === "folder"
@@ -378,9 +393,20 @@ export function Player() {
           }}
           onError={() => {
             if (!blob && !remoteSrc) return;
+            if (
+              !blob &&
+              remoteSrc?.includes("/api/stream") &&
+              fit === "original" &&
+              (title.source === "plex" || title.source === "jellyfin")
+            ) {
+              setFit("compatible");
+              setPlaybackFailed(false);
+              return;
+            }
             setPlaybackFailed(true);
             if (blob) setRemoteErr("This file could not be played in the browser.");
             else if (remoteSrc?.includes("/v1/play")) setRemoteErr("Could not play this file from Node on this computer.");
+            else if (fit === "compatible") setRemoteErr("Your server could not make a browser-friendly copy of this file.");
             else setRemoteErr("CINEVO could not play this file through the proxy. The server has to be reachable from here.");
           }}
           onEnded={() => {
@@ -413,7 +439,15 @@ export function Player() {
           </div>
           <div>
             <dt>Quality</dt>
-            <dd>{file?.startsWith("/api/stream") ? "Original · proxied" : file ? "Original on this device" : "—"}</dd>
+            <dd>
+              {fit === "compatible"
+                ? "Browser copy · your server"
+                : file?.startsWith("/api/stream")
+                  ? "Original · proxied"
+                  : file
+                    ? "Original on this device"
+                    : "—"}
+            </dd>
           </div>
           <div>
             <dt>Output</dt>
@@ -683,7 +717,9 @@ export function Player() {
                     const link = document.createElement("a");
                     link.href = href;
                     link.download = `${title.title}.mp4`;
+                    document.body.appendChild(link);
                     link.click();
+                    link.remove();
                   }}
                 >
                   <Download size={18} />

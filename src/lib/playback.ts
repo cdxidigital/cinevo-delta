@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/lib/auth/middleware";
+import type { PlaybackFit } from "@/lib/playback-urls";
 
 export const issuePlayback = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -10,6 +11,7 @@ export const issuePlayback = createServerFn({ method: "POST" })
       key: string;
       token: string;
       clientId?: string;
+      fit?: PlaybackFit;
     }) => input,
   )
   .handler(async ({ data, context }) => {

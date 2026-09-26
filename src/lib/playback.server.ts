@@ -1,5 +1,5 @@
 import { getSql } from "@/lib/db";
-import { jellyfinStreamTarget, nodeStreamTarget, plexStreamTarget, serverAddressError } from "@/lib/playback-urls";
+import { jellyfinStreamTarget, nodeStreamTarget, plexStreamTarget, serverAddressError, type PlaybackFit } from "@/lib/playback-urls";
 
 function ticketId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -15,6 +15,7 @@ export async function createTicket(input: {
   key: string;
   token: string;
   clientId?: string;
+  fit?: PlaybackFit;
 }) {
   const uri = input.uri.trim();
   const key = input.key.trim();
@@ -23,11 +24,12 @@ export async function createTicket(input: {
   const blocked = serverAddressError(uri);
   if (blocked) return { ok: false as const, error: blocked };
   const clientId = input.clientId || "cinevo-web";
+  const fit = input.fit === "compatible" ? "compatible" : "original";
   const target =
     input.provider === "plex"
-      ? plexStreamTarget(uri, key, token, clientId)
+      ? plexStreamTarget(uri, key, token, clientId, fit)
       : input.provider === "jellyfin"
-        ? jellyfinStreamTarget(uri, key, token, clientId)
+        ? jellyfinStreamTarget(uri, key, token, clientId, fit)
         : nodeStreamTarget(uri, token, key, clientId);
   const id = ticketId();
   const expires = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();

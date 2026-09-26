@@ -22,9 +22,18 @@ export function serverAddressError(uri: string) {
   return null;
 }
 
-export function plexStreamTarget(uri: string, ratingKey: string, token: string, clientId: string) {
+export type PlaybackFit = "original" | "compatible";
+
+export function plexStreamTarget(
+  uri: string,
+  ratingKey: string,
+  token: string,
+  clientId: string,
+  fit: PlaybackFit = "original",
+) {
   const key = ratingKey.replace(/^plex-/, "").replace(/^\//, "");
   const client = clientId || "cinevo-web";
+  const compatible = fit === "compatible";
   const params = new URLSearchParams({
     hasMDE: "1",
     path: `/library/metadata/${key}`,
@@ -33,12 +42,12 @@ export function plexStreamTarget(uri: string, ratingKey: string, token: string, 
     protocol: "http",
     fastSeek: "1",
     directPlay: "0",
-    directStream: "1",
-    directStreamAudio: "1",
-    videoQuality: "100",
-    maxVideoBitrate: "200000",
+    directStream: compatible ? "0" : "1",
+    directStreamAudio: compatible ? "0" : "1",
+    videoQuality: compatible ? "80" : "99",
+    maxVideoBitrate: compatible ? "20000" : "200000",
     location: "lan",
-    mediaBufferSize: "20480",
+    mediaBufferSize: compatible ? "10240" : "20480",
     subtitleSize: "100",
     audioBoost: "100",
     autoAdjustQuality: "0",
@@ -51,6 +60,11 @@ export function plexStreamTarget(uri: string, ratingKey: string, token: string, 
     "X-Plex-Version": "1.0.0",
     "X-Plex-Token": token,
   });
+  if (compatible) {
+    params.set("videoCodec", "h264");
+    params.set("audioCodec", "aac");
+    params.set("videoResolution", "1920x1080");
+  }
   return {
     url: `${uri.replace(/\/$/, "")}/video/:/transcode/universal/start.mp4?${params.toString()}`,
     headers: {
@@ -63,15 +77,27 @@ export function plexStreamTarget(uri: string, ratingKey: string, token: string, 
   };
 }
 
-export function jellyfinStreamTarget(base: string, itemId: string, token: string, clientId: string) {
+export function jellyfinStreamTarget(
+  base: string,
+  itemId: string,
+  token: string,
+  clientId: string,
+  fit: PlaybackFit = "original",
+) {
   const id = itemId.replace(/^jellyfin-/, "").replace(/^jf-/, "");
   const client = clientId || "cinevo-web";
+  const compatible = fit === "compatible";
   const params = new URLSearchParams({
-    static: "true",
+    static: compatible ? "false" : "true",
     mediaSourceId: id,
-    MaxStreamingBitrate: "200000000",
+    MaxStreamingBitrate: compatible ? "20000000" : "200000000",
     api_key: token,
   });
+  if (compatible) {
+    params.set("VideoCodec", "h264");
+    params.set("AudioCodec", "aac");
+    params.set("Container", "mp4");
+  }
   return {
     url: `${base.replace(/\/$/, "")}/Videos/${encodeURIComponent(id)}/stream.mp4?${params.toString()}`,
     headers: {

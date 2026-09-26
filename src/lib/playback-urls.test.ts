@@ -14,9 +14,10 @@ test("plex playback is a CINEVO-side stream, not direct play", () => {
   assert.equal(url.pathname, "/video/:/transcode/universal/start.mp4");
   assert.equal(url.searchParams.get("directPlay"), "0");
   assert.equal(url.searchParams.get("directStream"), "1");
-  assert.equal(url.searchParams.get("videoQuality"), "100");
+  assert.equal(url.searchParams.get("videoQuality"), "99");
   assert.equal(url.searchParams.get("maxVideoBitrate"), "200000");
   assert.equal(url.searchParams.get("location"), "lan");
+  assert.equal(url.searchParams.get("videoCodec"), null);
   assert.equal(url.searchParams.get("path"), "/library/metadata/99");
   assert.equal(url.searchParams.get("X-Plex-Token"), "secret-token");
   assert.equal(target.headers["X-Plex-Token"], "secret-token");
@@ -48,4 +49,22 @@ test("loopback and blocked addresses", () => {
   assert.equal(serverAddressError("file:///etc/passwd"), "That server address is not allowed.");
   assert.equal(serverAddressError("http://169.254.169.254/"), "That server address is not allowed.");
   assert.equal(serverAddressError("http://192.168.1.20:32400"), null);
+});
+
+test("a failed browser play can ask the server for an H.264 copy", () => {
+  const plex = new URL(plexStreamTarget("https://plex.example:32400/", "plex-99", "secret-token", "client-1", "compatible").url);
+  assert.equal(plex.searchParams.get("directPlay"), "0");
+  assert.equal(plex.searchParams.get("directStream"), "0");
+  assert.equal(plex.searchParams.get("videoCodec"), "h264");
+  assert.equal(plex.searchParams.get("audioCodec"), "aac");
+  assert.equal(plex.searchParams.get("maxVideoBitrate"), "20000");
+  assert.equal(plex.searchParams.get("videoResolution"), "1920x1080");
+
+  const jellyfin = new URL(
+    jellyfinStreamTarget("http://jellyfin.example:8096", "jellyfin-abc", "jf-secret", "client-1", "compatible").url,
+  );
+  assert.equal(jellyfin.searchParams.get("static"), "false");
+  assert.equal(jellyfin.searchParams.get("VideoCodec"), "h264");
+  assert.equal(jellyfin.searchParams.get("AudioCodec"), "aac");
+  assert.equal(jellyfin.searchParams.get("MaxStreamingBitrate"), "20000000");
 });
