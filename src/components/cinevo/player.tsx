@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Activity, Bookmark, Expand, Info, Pause, Play, Subtitles, Volume2, VolumeX, X } from "lucide-react";
+import { Activity, Bookmark, Download, Expand, Info, Pause, Play, Subtitles, Volume2, VolumeX, X } from "lucide-react";
 import { titleById, useCinevo } from "@/lib/cinevo-store";
 import { mediaUrl, sourceForTitle } from "@/lib/library";
 import { reconnectFolders } from "@/lib/folder-handles";
@@ -350,8 +350,9 @@ export function Player() {
           ref={videoRef}
           data-cinevo-player=""
           src={file}
-          className="absolute inset-0 h-full w-full bg-cine-bg object-contain"
+          className="player-video absolute inset-0 h-full w-full bg-cine-bg object-contain"
           playsInline
+          preload="auto"
           autoPlay
           muted={muted}
           onLoadedData={(e) => {
@@ -409,6 +410,10 @@ export function Player() {
           <div>
             <dt>Decision</dt>
             <dd>{nerd?.path ?? streamPath(file, title.source)}</dd>
+          </div>
+          <div>
+            <dt>Quality</dt>
+            <dd>{file?.startsWith("/api/stream") ? "Original · proxied" : file ? "Original on this device" : "—"}</dd>
           </div>
           <div>
             <dt>Output</dt>
@@ -512,7 +517,7 @@ export function Player() {
         ) : null}
       </div>
       <section
-        className={`player-bar absolute inset-x-0 bottom-0 z-10 space-y-3 p-5 transition-opacity ${
+        className={`player-bar absolute inset-x-0 bottom-0 z-10 space-y-3 transition-opacity ${
           chrome ? "opacity-100" : "pointer-events-none opacity-0"
         } ${focusMode ? "opacity-70" : ""}`}
         onClick={(e) => e.stopPropagation()}
@@ -664,6 +669,24 @@ export function Player() {
                   onClick={() => setStatsOpen((open) => !open)}
                 >
                   <Activity size={18} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Download original"
+                  className="flex size-11 items-center justify-center"
+                  onClick={() => {
+                    if (!file.startsWith("/api/stream")) {
+                      flash("This file plays from the browser. Use the folder if you need the original.");
+                      return;
+                    }
+                    const href = `${file}${file.includes("?") ? "&" : "?"}download=1`;
+                    const link = document.createElement("a");
+                    link.href = href;
+                    link.download = `${title.title}.mp4`;
+                    link.click();
+                  }}
+                >
+                  <Download size={18} />
                 </button>
                 <button
                   type="button"

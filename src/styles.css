@@ -960,7 +960,7 @@ html[data-theme="paper"] .house-ambient {
 }
 
 .house-main--page {
-  width: min(1320px, 100%);
+  width: min(100%, clamp(40rem, 88vw, 110rem));
   margin: 0 auto;
   padding: 7.25rem max(5vw, 1.25rem) 5rem;
 }
@@ -2663,10 +2663,28 @@ html[data-theme="paper"] .house-ambient {
 .public-prose a { color: var(--color-cine-cyan); }
 
 @media (max-width: 760px) {
-  .public-nav { grid-template-columns: 1fr; min-height: 64px; padding: 0 16px; justify-items: end; }
-  .public-nav nav { display: none; }
+  .public-nav {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 10px 16px 8px;
+    justify-items: stretch;
+    background: linear-gradient(180deg, rgb(5 5 5 / 88%) 0%, rgb(5 5 5 / 55%) 70%, transparent 100%);
+  }
+  .public-nav nav {
+    display: flex;
+    gap: 14px;
+    min-width: 0;
+    overflow-x: auto;
+  }
+  .public-nav nav a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    font-size: 14px;
+    white-space: nowrap;
+  }
   .public-nav__signin { display: none; }
-  .public-hero { min-height: 100svh; align-items: flex-end; padding: 88px 20px 36px; }
+  .public-hero { min-height: 100svh; align-items: flex-end; padding: 148px 20px 36px; }
   .public-hero__logo.brand[data-layout="stacked"][data-size="xl"] .brand__gem { width: 52px; height: 52px; }
   .public-hero__logo.brand[data-size="xl"] b { font-size: 1.45rem; }
   .public-hero h1 { font-size: clamp(36px, 11vw, 52px); }
@@ -2789,20 +2807,36 @@ html[data-theme="paper"] .house-ambient {
 }
 
 @media (max-height: 740px) {
+  .login-stage { padding: 0.75rem 1rem; }
   .login-card {
-    padding: 1.1rem 1.15rem 1rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+    padding: 0.9rem 1rem 0.85rem;
   }
+  .login-card > a { margin-bottom: 0.45rem; }
   .login-card .brand[data-layout="stacked"][data-size="lg"] {
-    gap: 8px;
+    gap: 6px;
   }
   .login-card .brand[data-layout="stacked"][data-size="lg"] .brand__gem {
-    width: 52px;
-    height: 52px;
+    width: 36px;
+    height: 36px;
+  }
+  .login-card .brand[data-layout="stacked"][data-size="lg"] b {
+    font-size: 1.15rem;
   }
   .login-card h1 {
-    font-size: 1.75rem;
+    margin-top: 0.35rem;
+    font-size: 1.55rem;
     line-height: 1.1;
   }
+  .login-card .mt-8 { margin-top: 0.7rem; }
+  .login-card .my-5 { margin-top: 0.55rem; margin-bottom: 0.55rem; }
+  .login-card .mt-5 { margin-top: 0.55rem; }
+  .login-card .mt-3 { margin-top: 0.35rem; }
+  .login-card form { gap: 0.45rem; }
+  .login-card input,
+  .login-card .house-btn,
+  .login-card button.h-12 { height: 2.6rem; }
 }
 
 .cinevo-house {
@@ -3294,7 +3328,7 @@ html[data-theme="iris"] .cinevo-house {
   }
 
   .house-main.house-main--page {
-    width: min(82rem, calc(100% - var(--rail)));
+    width: min(110rem, calc(100% - var(--rail)));
   }
 }
 
@@ -3422,9 +3456,19 @@ html[data-theme="iris"] .cinevo-house {
   border: 0;
   border-radius: 0;
   border-top: 1px solid color-mix(in srgb, white 14%, transparent);
+  padding: clamp(0.85rem, 2.2vw, 1.6rem);
+  padding-bottom: max(clamp(0.85rem, 2.2vw, 1.6rem), env(safe-area-inset-bottom));
   background:
     linear-gradient(180deg, rgb(255 255 255 / 10%), transparent 40%),
     linear-gradient(0deg, rgb(0 0 0 / 55%), rgb(0 0 0 / 18%));
+}
+.player-bar strong {
+  font-size: clamp(1rem, 1.8vw, 1.45rem);
+}
+.player-video {
+  width: 100%;
+  height: 100%;
+  max-height: 100dvh;
 }
 
 .tool-card,
@@ -3548,13 +3592,14 @@ html[data-theme="paper"] .side-rail__nav button.is-on {
     font-size: clamp(0.95rem, 1.5cqi, 1.0625rem);
   }
   .rail-card {
-    width: clamp(8.25rem, 30cqi, 13.25rem);
+    width: clamp(7.5rem, 22cqi, 16rem);
   }
   .rail-card.is-wide {
-    width: clamp(15rem, 52cqi, 26rem);
+    width: clamp(14rem, 46cqi, 32rem);
   }
   .poster-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(46cqi, 12.5rem), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, clamp(8.5rem, 22cqi, 16rem)), 1fr));
+    gap: clamp(0.7rem, 2cqi, 1.5rem) clamp(0.45rem, 1.2cqi, 1rem);
   }
   .house-main--page {
     padding-top: clamp(5.25rem, 10cqi, 7.25rem);
@@ -3661,7 +3706,7 @@ html[data-theme="paper"] .side-rail__nav button.is-on {
 .install-bar {
   position: fixed;
   z-index: 40;
-  top: 0.6rem;
+  top: 7.25rem;
   left: 50%;
   display: flex;
   gap: 0.75rem;

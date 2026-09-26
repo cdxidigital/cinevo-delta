@@ -204,7 +204,7 @@ function streamFile(req, res, filePath) {
   const extra = {
     "Content-Type": mimeOf(filePath),
     "Accept-Ranges": "bytes",
-    "Cache-Control": "no-store",
+    "Cache-Control": "private, no-transform",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Expose-Headers": "Content-Range, Accept-Ranges, Content-Length",
   };
@@ -230,12 +230,12 @@ function streamFile(req, res, filePath) {
         "Content-Length": String(end - start + 1),
         "Content-Range": `bytes ${start}-${end}/${size}`,
       });
-      fs.createReadStream(filePath, { start, end }).pipe(res);
+      fs.createReadStream(filePath, { start, end, highWaterMark: 1024 * 1024 }).pipe(res);
       return;
     }
   }
   res.writeHead(200, { ...extra, "Content-Length": String(size) });
-  fs.createReadStream(filePath).pipe(res);
+  fs.createReadStream(filePath, { highWaterMark: 1024 * 1024 }).pipe(res);
 }
 
 function brandPng() {

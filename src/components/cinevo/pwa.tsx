@@ -24,7 +24,8 @@ export function Pwa() {
   }, []);
 
   if (dismissed) return null;
-  if (window.location.pathname.startsWith("/app") || window.location.pathname.startsWith("/remote")) return null;
+  const path = window.location.pathname;
+  if (path !== "/") return null;
   if (window.matchMedia("(min-width: 900px)").matches) return null;
 
   return (

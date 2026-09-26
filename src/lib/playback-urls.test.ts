@@ -14,6 +14,9 @@ test("plex playback is a CINEVO-side stream, not direct play", () => {
   assert.equal(url.pathname, "/video/:/transcode/universal/start.mp4");
   assert.equal(url.searchParams.get("directPlay"), "0");
   assert.equal(url.searchParams.get("directStream"), "1");
+  assert.equal(url.searchParams.get("videoQuality"), "100");
+  assert.equal(url.searchParams.get("maxVideoBitrate"), "200000");
+  assert.equal(url.searchParams.get("location"), "lan");
   assert.equal(url.searchParams.get("path"), "/library/metadata/99");
   assert.equal(url.searchParams.get("X-Plex-Token"), "secret-token");
   assert.equal(target.headers["X-Plex-Token"], "secret-token");
@@ -25,6 +28,7 @@ test("jellyfin playback keeps the key on the server URL", () => {
   const url = new URL(target.url);
   assert.equal(url.pathname, "/Videos/abc/stream.mp4");
   assert.equal(url.searchParams.get("static"), "true");
+  assert.equal(url.searchParams.get("MaxStreamingBitrate"), "200000000");
   assert.equal(url.searchParams.get("api_key"), "jf-secret");
   assert.match(target.headers.Authorization, /Token="jf-secret"/);
 });

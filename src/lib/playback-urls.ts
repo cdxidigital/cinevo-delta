@@ -34,6 +34,11 @@ export function plexStreamTarget(uri: string, ratingKey: string, token: string, 
     fastSeek: "1",
     directPlay: "0",
     directStream: "1",
+    directStreamAudio: "1",
+    videoQuality: "100",
+    maxVideoBitrate: "200000",
+    location: "lan",
+    mediaBufferSize: "20480",
     subtitleSize: "100",
     audioBoost: "100",
     autoAdjustQuality: "0",
@@ -64,6 +69,7 @@ export function jellyfinStreamTarget(base: string, itemId: string, token: string
   const params = new URLSearchParams({
     static: "true",
     mediaSourceId: id,
+    MaxStreamingBitrate: "200000000",
     api_key: token,
   });
   return {
