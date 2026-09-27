@@ -1,8 +1,8 @@
 import { r as createServerFn } from "./ssr.mjs";
 import { t as createServerRpc } from "./createServerRpc-CcvdN_gc.mjs";
-import { i as parsePlexSections, n as parsePlexMetadata, r as parsePlexResources, s as rankConnections } from "./plex-Clld3z8V.mjs";
-import { t as authMiddleware } from "./middleware-cV1SonvL.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/plex-api-DkH5LEsM.js
+import { i as parsePlexSections, n as parsePlexMetadata, r as parsePlexResources, s as rankConnections } from "./plex-BKVmxkOQ.mjs";
+import { t as authMiddleware } from "./middleware-R7GbGJlf.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/plex-api-CZPE3H3O.js
 function plexHeaders(clientId, token) {
 	return {
 		Accept: "application/json",

@@ -1,8 +1,8 @@
 import { r as createServerFn } from "./ssr.mjs";
 import { t as createServerRpc } from "./createServerRpc-CcvdN_gc.mjs";
 import { n as factsFromJellyfin } from "./artwork-model-BgxZamve.mjs";
-import { t as authMiddleware } from "./middleware-cV1SonvL.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/jellyfin-api-CR4Kiy6v.js
+import { t as authMiddleware } from "./middleware-R7GbGJlf.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/jellyfin-api-Bm9H_F8J.js
 function authHeader(deviceId, token) {
 	const parts = [
 		`Client="CINEVO"`,

@@ -1,8 +1,8 @@
 import { r as createServerFn } from "./ssr.mjs";
-import { t as authMiddleware } from "./middleware-cV1SonvL.mjs";
+import { t as authMiddleware } from "./middleware-R7GbGJlf.mjs";
 import "./client-COXjRbXB.mjs";
-import { T as createSsrRpc } from "./router-DHGcFAsj.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/sharing-CkO7Qny-.js
+import { T as createSsrRpc } from "./router-9dS_U4af.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/sharing-D0mB1UHN.js
 /**
 * Stable fallback user, used ONLY when auth is disabled
 * (`VITE_AUTH_ENABLED=false`, the shipped default). With auth on, the sandbox

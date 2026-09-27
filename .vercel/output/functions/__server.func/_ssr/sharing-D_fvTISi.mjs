@@ -1,8 +1,8 @@
 import { r as createServerFn } from "./ssr.mjs";
 import { t as createServerRpc } from "./createServerRpc-CcvdN_gc.mjs";
-import { t as authMiddleware } from "./middleware-cV1SonvL.mjs";
+import { t as authMiddleware } from "./middleware-R7GbGJlf.mjs";
 import { r as getSql } from "./db-Om--2ukh.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/sharing-CikFSGT0.js
+//#region node_modules/.nitro/vite/services/ssr/assets/sharing-D_fvTISi.js
 var USERNAME_RE = /^[a-zA-Z][a-zA-Z0-9_]{2,19}$/;
 function parseTitles(raw) {
 	try {

@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-CaufbITP.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-DnvHyGAg.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "/tmp/cinevo-delta/src/routes/__root.tsx",
@@ -19,7 +19,7 @@ var tsrStartManifest = () => ({ routes: {
 			"/api/stream/$ticket"
 		],
 		preloads: [
-			"/assets/index-BRzDn0am.js",
+			"/assets/index-zFcQP-4P.js",
 			"/assets/react-SIfiwpqq.js",
 			"/assets/createServerFn-CPxJCNbI.js",
 			"/assets/link-BpILKzHT.js",
@@ -38,7 +38,7 @@ var tsrStartManifest = () => ({ routes: {
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-BRzDn0am.js"
+			src: "/assets/index-zFcQP-4P.js"
 		} }]
 	},
 	"/": {
@@ -58,7 +58,7 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "/tmp/cinevo-delta/src/routes/app.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/app-DGVhUTiP.js",
+			"/assets/app-CTOQtKnC.js",
 			"/assets/useNavigate-DXcxsg0o.js",
 			"/assets/arrow-left-CVGhVxii.js",
 			"/assets/account-CckfIbdA.js",
@@ -95,7 +95,7 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "/tmp/cinevo-delta/src/routes/node.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/node-C-HvoJlz.js",
+			"/assets/node-DM1ig97U.js",
 			"/assets/arrow-left-CVGhVxii.js",
 			"/assets/loader-circle-C0iTT0u2.js",
 			"/assets/shield-check-DKQOYdCG.js",
@@ -107,7 +107,7 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "/tmp/cinevo-delta/src/routes/remote.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/remote-BjjE9xij.js",
+			"/assets/remote-BdAdodxh.js",
 			"/assets/pause-Dfbk87HB.js",
 			"/assets/play-sMViJy6A.js",
 			"/assets/logo-BW9MY1vI.js"
@@ -127,7 +127,7 @@ var tsrStartManifest = () => ({ routes: {
 		filePath: "/tmp/cinevo-delta/src/routes/s.$token.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/s._token-Dve6mKTH.js",
+			"/assets/s._token-nrywd5e3.js",
 			"/assets/sharing-Dvok8Uf7.js",
 			"/assets/logo-BW9MY1vI.js",
 			"/assets/gates-CLWmHItP.js"

@@ -1,9 +1,9 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { V as require_react, x as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
 import { I as Download, b as Play, f as SkipForward, p as SkipBack, u as Square, x as Pause } from "../_libs/lucide-react.mjs";
-import { d as sendRemoteCommand, m as normalizeCode, o as InstallCinevo, s as REMOTE_APK, u as readPhoneRemote } from "./router-DHGcFAsj.mjs";
+import { d as sendRemoteCommand, m as normalizeCode, o as InstallCinevo, s as REMOTE_APK, u as readPhoneRemote } from "./router-9dS_U4af.mjs";
 import { r as Logo } from "./logo-CUuDfWlp.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/remote-B8uwLFKk.js
+//#region node_modules/.nitro/vite/services/ssr/assets/remote-BhjHuCLh.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var PHONE_CODE = "cinevo-phone-code";

@@ -1,9 +1,9 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { V as require_react, _ as Link, x as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
 import { a as cn } from "./logo-CUuDfWlp.mjs";
-import { i as getMyProfile, n as claimUsername, u as useCurrentUserState } from "./sharing-CkO7Qny-.mjs";
-import { r as UserButton } from "./gates-CxBN8xzE.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/account-DvZ1-MO7.js
+import { i as getMyProfile, n as claimUsername, u as useCurrentUserState } from "./sharing-D0mB1UHN.mjs";
+import { r as UserButton } from "./gates-4HWmmTPN.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/account-Bn_bYHyI.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function AuthSlot({ className }) {

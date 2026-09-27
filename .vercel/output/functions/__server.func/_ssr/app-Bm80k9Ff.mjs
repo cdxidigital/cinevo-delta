@@ -2,17 +2,17 @@ import { o as __toESM } from "../_runtime.mjs";
 import { V as require_react, _ as Link, v as Navigate, x as require_jsx_runtime, y as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { r as createServerFn } from "./ssr.mjs";
 import { t as artProxyUrl } from "./artwork-model-BgxZamve.mjs";
-import { a as plexAuthUrl, o as plexClientId, t as connectionKind } from "./plex-Clld3z8V.mjs";
+import { a as plexAuthUrl, o as plexClientId, t as connectionKind } from "./plex-BKVmxkOQ.mjs";
 import { t as isLoopbackUrl } from "./playback-urls-D1az5Dji.mjs";
-import { t as authMiddleware } from "./middleware-cV1SonvL.mjs";
+import { t as authMiddleware } from "./middleware-R7GbGJlf.mjs";
 import { B as Check, C as LoaderCircle, D as Library, F as Expand, H as Cable, I as Download, J as Activity, K as ArrowLeft, L as Clapperboard, M as House, N as HardDrive, O as LayoutGrid, P as FolderPlus, S as Menu, T as ListPlus, U as Bookmark, V as Captions, W as Bell, _ as Server, b as Play, c as Trash2, g as Settings2, i as Volume2, j as Info, k as LayoutList, l as Star, m as Shuffle, n as Wrench, o as Tv, r as VolumeX, t as X, v as Search, w as List, x as Pause, z as ChevronLeft } from "../_libs/lucide-react.mjs";
-import { A as paramFromRoom, B as playableCount, C as recentlyAdded, F as applySourceFilter, H as remoteTitle, I as isVideoFile, M as saveThumb, N as roomFromParam, O as loadThumbs, P as THEMES, S as pickFeatured, T as createSsrRpc, U as scanFileList, W as sourceForTitle, _ as useCinevo, a as HouseRemote, b as filterCatalog, c as openHouseRemote, f as syncHouseRemote, g as titleById, h as libraryPool, i as Route$12, j as saveFolderHandle, k as reconnectFolders, l as readHouseCode, o as InstallCinevo, p as writeHouseCode, v as MOODS, w as similarTo, x as genresIn, y as byMood, z as mediaUrl } from "./router-DHGcFAsj.mjs";
+import { A as paramFromRoom, B as playableCount, C as recentlyAdded, F as applySourceFilter, H as remoteTitle, I as isVideoFile, M as saveThumb, N as roomFromParam, O as loadThumbs, P as THEMES, S as pickFeatured, T as createSsrRpc, U as scanFileList, W as sourceForTitle, _ as useCinevo, a as HouseRemote, b as filterCatalog, c as openHouseRemote, f as syncHouseRemote, g as titleById, h as libraryPool, i as Route$12, j as saveFolderHandle, k as reconnectFolders, l as readHouseCode, o as InstallCinevo, p as writeHouseCode, v as MOODS, w as similarTo, x as genresIn, y as byMood, z as mediaUrl } from "./router-9dS_U4af.mjs";
 import { a as cn, i as Mark, n as BrandWatermark, r as Logo, t as BrandKicker } from "./logo-CUuDfWlp.mjs";
-import { a as listMyShares, c as setShareStatus, i as getMyProfile, l as useCurrentUser, o as lookupUsername, r as createShare, t as bumpWatch, u as useCurrentUserState } from "./sharing-CkO7Qny-.mjs";
-import { n as SignedOut, t as SignedIn } from "./gates-CxBN8xzE.mjs";
-import { r as UsernameGate, t as AuthSlot } from "./account-DvZ1-MO7.mjs";
+import { a as listMyShares, c as setShareStatus, i as getMyProfile, l as useCurrentUser, o as lookupUsername, r as createShare, t as bumpWatch, u as useCurrentUserState } from "./sharing-D0mB1UHN.mjs";
+import { n as SignedOut, t as SignedIn } from "./gates-4HWmmTPN.mjs";
+import { r as UsernameGate, t as AuthSlot } from "./account-Bn_bYHyI.mjs";
 import { i as nodePlayUrl, n as addNodeFolder, t as InstallerCards } from "./installers-BtI_dh71.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/app-Kp1ZDK1S.js
+//#region node_modules/.nitro/vite/services/ssr/assets/app-Bm80k9Ff.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var refreshLibraryArt = createServerFn({ method: "POST" }).middleware([authMiddleware]).validator((input) => input).handler(createSsrRpc("b670e38f35357464eddb77d89fbbffb163995da493c86e56e6512e69a50dc1d3"));
@@ -1007,8 +1007,8 @@ function PlexConnect() {
 				id: res.id,
 				code: res.code
 			});
-			const url = plexAuthUrl(clientId(), res.code);
-			window.open(url, "cinevo-plex", "width=560,height=760");
+			const url = plexAuthUrl(clientId(), res.code, window.location.href);
+			if (!window.open(url, "cinevo-plex", "popup,width=560,height=760")) setMessage("The Plex window was blocked. Use the approval link below.");
 			if (pollRef.current) window.clearInterval(pollRef.current);
 			const started = Date.now();
 			pollRef.current = window.setInterval(() => {
@@ -1030,6 +1030,9 @@ function PlexConnect() {
 					await refreshServers(poll.token, "");
 				})();
 			}, 1600);
+		} catch (err) {
+			const text = err instanceof Error ? err.message : "Could not start Plex sign-in.";
+			setMessage(text === "Unauthorized" ? "Sign in to CINEVO first. Plex connects to your house." : text);
 		} finally {
 			setPending(false);
 		}
@@ -1189,26 +1192,18 @@ function PlexConnect() {
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "font-ui text-xs font-medium uppercase tracking-[0.1em] text-cine-muted",
-						children: "Plex pin"
+						children: "Waiting for Plex"
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "mt-1 font-mono text-3xl font-semibold tracking-[0.12em]",
-						children: pin.code
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 						className: "mt-2 text-sm text-cine-faint",
-						children: [
-							"Approve CINEVO at",
-							" ",
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
-								className: "text-cine-cyan",
-								href: plexAuthUrl(clientId(), pin.code),
-								target: "_blank",
-								rel: "noreferrer",
-								children: "plex.tv"
-							}),
-							". Waiting for the account…"
-						]
+						children: "Approve CINEVO in the Plex window. This is not a short code to type at plex.tv/link."
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+						className: "mt-3 inline-flex h-11 items-center font-ui text-sm font-bold text-cine-cyan",
+						href: plexAuthUrl(clientId(), pin.code, typeof window !== "undefined" ? window.location.href : void 0),
+						target: "_blank",
+						rel: "noreferrer",
+						children: "Open Plex approval"
 					})
 				]
 			}) : null,

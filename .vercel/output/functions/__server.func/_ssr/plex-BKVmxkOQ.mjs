@@ -1,5 +1,5 @@
 import { r as factsFromPlex } from "./artwork-model-BgxZamve.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/plex-Clld3z8V.js
+//#region node_modules/.nitro/vite/services/ssr/assets/plex-BKVmxkOQ.js
 function plexClientId() {
 	if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
 		try {
@@ -16,12 +16,18 @@ function plexClientId() {
 	}
 	return "cinevo-web";
 }
-function plexAuthUrl(clientId, code) {
-	return `https://app.plex.tv/auth#?${new URLSearchParams({
+function plexAuthUrl(clientId, code, forwardUrl) {
+	const params = new URLSearchParams({
 		clientID: clientId,
 		code,
-		"context[device][product]": "CINEVO"
-	}).toString()}`;
+		"context[device][product]": "CINEVO",
+		"context[device][version]": "1.0.0",
+		"context[device][platform]": "Web",
+		"context[device][device]": "Web",
+		"context[device][deviceName]": "CINEVO"
+	});
+	if (forwardUrl) params.set("forwardUrl", forwardUrl);
+	return `https://app.plex.tv/auth/#!?${params.toString()}`;
 }
 function isPlexServer(resource) {
 	return String(resource.provides || "").split(",").map((s) => s.trim().toLowerCase()).includes("server") || String(resource.product || "").toLowerCase().includes("plex media server");

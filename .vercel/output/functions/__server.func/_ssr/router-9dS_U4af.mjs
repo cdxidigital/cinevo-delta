@@ -6,7 +6,7 @@ import { i as safeArtPath } from "./artwork-model-BgxZamve.mjs";
 import { r as getSql } from "./db-Om--2ukh.mjs";
 import { L as string, N as number, P as object, R as union, j as literal } from "../_libs/@better-auth/core+[...].mjs";
 import { r as getBearerToken } from "./client-COXjRbXB.mjs";
-import { i as auth, n as requireUserId, t as UnauthorizedError } from "./verify.server-A72BAZzm.mjs";
+import { i as auth, n as requireUserId, t as UnauthorizedError } from "./verify.server-CpYHinRg.mjs";
 import { t as loadTicket } from "./playback.server-BUB6NozS.mjs";
 import { I as Download, d as Smartphone, s as TriangleAlert } from "../_libs/lucide-react.mjs";
 import { n as create, t as persist } from "../_libs/zustand.mjs";
@@ -266,7 +266,7 @@ function paramFromRoom(room) {
 	return room;
 }
 //#endregion
-//#region node_modules/.nitro/vite/services/ssr/assets/router-DHGcFAsj.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-9dS_U4af.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var DB = "cinevo-fs";
@@ -1192,7 +1192,7 @@ var useCinevo = create()(persist((set, get) => ({
 		import("../_libs/_.mjs").then((n) => n.i).then((m) => {
 			for (const t of droppedLocal) m.forgetBlob(t.id);
 		});
-		import("./folder-handles-DRwASPKp.mjs").then((m) => m.deleteFolderHandle(id));
+		import("./folder-handles-CD41fTsv.mjs").then((m) => m.deleteFolderHandle(id));
 		get().flash("Source removed");
 	},
 	setSourceFilter: (sourceFilter) => set({ sourceFilter }),
@@ -1307,7 +1307,7 @@ var useCinevo = create()(persist((set, get) => ({
 			localStorage.removeItem("cinevo-storage");
 		} catch {}
 		import("../_libs/_.mjs").then((n) => n.i).then((m) => m.forgetAllBlobs());
-		import("./folder-handles-DRwASPKp.mjs").then((m) => m.clearFolderHandles());
+		import("./folder-handles-CD41fTsv.mjs").then((m) => m.clearFolderHandles());
 		get().flash("Local data cleared");
 	}
 }), {
@@ -1782,7 +1782,7 @@ function Pwa() {
 		})]
 	});
 }
-var styles_default = "/assets/styles-Z9innylQ.css";
+var styles_default = "/assets/styles-C4gY220i.css";
 var APP_NAME = "CINEVO";
 var fetchSessionUser = createServerFn({ method: "GET" }).handler(createSsrRpc("2c4985e96c199268f7f639534cb5e8e31d6b19d43286bf77416413db60ffde26"));
 var Route$14 = createRootRoute({
@@ -1856,9 +1856,9 @@ var Route$14 = createRootRoute({
 		})]
 	})
 });
-var $$splitComponentImporter$9 = () => import("./routes-Bc4RZmOl.mjs");
+var $$splitComponentImporter$9 = () => import("./routes-Cru_rjqm.mjs");
 var Route$13 = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter$9, "component") });
-var $$splitComponentImporter$8 = () => import("./app-Kp1ZDK1S.mjs");
+var $$splitComponentImporter$8 = () => import("./app-Bm80k9Ff.mjs");
 var Route$12 = createFileRoute("/app")({
 	validateSearch: (search) => appDestination(search),
 	component: lazyRouteComponent($$splitComponentImporter$8, "component")
@@ -1867,7 +1867,7 @@ var $$splitComponentImporter$7 = () => import("./connect-Cqqt78s6.mjs");
 var Route$11 = createFileRoute("/connect")({ component: lazyRouteComponent($$splitComponentImporter$7, "component") });
 var $$splitComponentImporter$6 = () => import("./help-BPcg0enI.mjs");
 var Route$10 = createFileRoute("/help")({ component: lazyRouteComponent($$splitComponentImporter$6, "component") });
-var $$splitComponentImporter$5 = () => import("./login-7LI4fN07.mjs");
+var $$splitComponentImporter$5 = () => import("./login-S3CDzwBE.mjs");
 var Route$9 = createFileRoute("/login")({
 	validateSearch: (search) => ({
 		mode: search.mode === "up" ? "up" : "in",
@@ -1875,9 +1875,9 @@ var Route$9 = createFileRoute("/login")({
 	}),
 	component: lazyRouteComponent($$splitComponentImporter$5, "component")
 });
-var $$splitComponentImporter$4 = () => import("./node-s-PU73pl.mjs");
+var $$splitComponentImporter$4 = () => import("./node-8d9LWbwL.mjs");
 var Route$8 = createFileRoute("/node")({ component: lazyRouteComponent($$splitComponentImporter$4, "component") });
-var $$splitComponentImporter$3 = () => import("./remote-B8uwLFKk.mjs");
+var $$splitComponentImporter$3 = () => import("./remote-BhjHuCLh.mjs");
 var Route$7 = createFileRoute("/remote")({
 	component: lazyRouteComponent($$splitComponentImporter$3, "component"),
 	head: () => ({ meta: [
@@ -2078,7 +2078,7 @@ var $$splitComponentImporter$2 = () => import("./legal.privacy-ByxeaT1k.mjs");
 var Route$5 = createFileRoute("/legal/privacy")({ component: lazyRouteComponent($$splitComponentImporter$2, "component") });
 var $$splitComponentImporter$1 = () => import("./legal.terms-temGHg96.mjs");
 var Route$4 = createFileRoute("/legal/terms")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
-var $$splitComponentImporter = () => import("./s._token-Cn-lq9Z1.mjs");
+var $$splitComponentImporter = () => import("./s._token-NhWT77rj.mjs");
 var Route$3 = createFileRoute("/s/$token")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
 var Route$2 = createFileRoute("/api/art/$ticket")({ server: { handlers: { GET: async ({ request, params }) => {
 	const path = safeArtPath(new URL(request.url).searchParams.get("path") || "");

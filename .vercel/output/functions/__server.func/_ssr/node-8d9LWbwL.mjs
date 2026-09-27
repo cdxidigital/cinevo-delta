@@ -1,10 +1,10 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { V as require_react, _ as Link, x as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
 import { A as KeyRound, C as LoaderCircle, E as Link2, K as ArrowLeft, R as CircleCheck, a as Unplug, h as ShieldCheck, y as RefreshCw } from "../_libs/lucide-react.mjs";
-import { _ as useCinevo } from "./router-DHGcFAsj.mjs";
+import { _ as useCinevo } from "./router-9dS_U4af.mjs";
 import { r as Logo } from "./logo-CUuDfWlp.mjs";
 import { a as nodeStatus, o as pairNode, r as checkNode, s as revokeConnection, t as InstallerCards } from "./installers-BtI_dh71.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/node-s-PU73pl.js
+//#region node_modules/.nitro/vite/services/ssr/assets/node-8d9LWbwL.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function NodePairing() {
