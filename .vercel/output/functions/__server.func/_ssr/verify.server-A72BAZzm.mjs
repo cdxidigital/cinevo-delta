@@ -9066,4 +9066,4 @@ async function requireUserId(bearerToken) {
 	return user.id;
 }
 //#endregion
-export { hasGateSessionMarker as a, auth as i, requireUserId as n, GROK_PROVIDERS as o, verify_server_exports as r, UnauthorizedError as t };
+export { hasGateSessionMarker as a, auth as i, requireUserId as n, verify_server_exports as r, UnauthorizedError as t };

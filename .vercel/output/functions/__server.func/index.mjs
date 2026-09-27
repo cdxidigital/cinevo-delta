@@ -14,9 +14,7 @@ var install_page_default = "<!DOCTYPE html>\n<html lang=\"en\" class=\"device-de
 var grokOgIdentity = { "site": {
 	"title": "CINEVO",
 	"description": "Your media. Your moment. Private cinema for Plex, Jellyfin, and home folders.",
-	"card": "custom",
-	"color": "0E0718",
-	"image": "/og.jpg"
+	"color": "0E0718"
 } };
 //#endregion
 //#region scripts/grok-pwa-shared.mjs
@@ -119,12 +117,14 @@ function renderInstallPageHtml(template, { host, url } = {}) {
 	return String(template).replaceAll("{{APP_NAME}}", escapeHtml(appNameFromHost(host))).replaceAll("{{APP_URL}}", escapeHtml(stripInstallParams(url)));
 }
 function renderWebManifest(hostHeader) {
-	const name = appNameFromHost(hostHeader);
+	const siteName = String(readOgSite().title ?? "").trim();
+	const name = appNameFromHost(hostHeader) === "Grok App" ? siteName || "Grok App" : appNameFromHost(hostHeader);
+	const isPreview = appNameFromHost(hostHeader) === DEFAULT_APP_NAME;
 	return JSON.stringify({
 		name,
 		short_name: name,
-		id: "/",
-		start_url: "/",
+		id: isPreview ? "/app" : "/",
+		start_url: isPreview ? "/app" : "/",
 		scope: "/",
 		display: "standalone",
 		background_color: "#000000",
@@ -133,7 +133,17 @@ function renderWebManifest(hostHeader) {
 			src: "/__grok/icon-180.png",
 			sizes: "180x180",
 			type: "image/png"
-		}]
+		}, ...isPreview ? [{
+			src: "/__grok/icon-512.png",
+			sizes: "512x512",
+			type: "image/png",
+			purpose: "any"
+		}, {
+			src: "/__grok/icon-512.png",
+			sizes: "512x512",
+			type: "image/png",
+			purpose: "maskable"
+		}] : []]
 	}, null, 2);
 }
 function grokPwaHeadTags(appName = DEFAULT_APP_NAME) {
@@ -213,13 +223,15 @@ function titleFromDocument(html) {
 	return match ? unescapeHtml(match[1]).trim() : "";
 }
 function resolveOgTitle(site = {}, appName = DEFAULT_APP_NAME, host = "", documentTitle = "") {
-	const fromSite = String(site.title ?? "").trim();
-	if (fromSite) return fromSite;
 	const fromDoc = String(documentTitle ?? "").trim();
 	if (fromDoc) return fromDoc;
+	const fromArg = String(appName ?? "").trim();
 	const fromHost = appNameFromHost(host);
+	const fromSite = String(site.title ?? "").trim();
+	if (fromSite && fromSite !== "CINEVO") return fromSite;
+	if (fromArg && fromArg !== "Grok App") return fromArg;
 	if (fromHost && fromHost !== "Grok App") return fromHost;
-	return String(appName ?? "").trim() || "Grok App";
+	return fromSite || fromArg || "Grok App";
 }
 function siteHasCustomCard(site = {}) {
 	return String(site.card ?? "").toLowerCase() === "custom";
