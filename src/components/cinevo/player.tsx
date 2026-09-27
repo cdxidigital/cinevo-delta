@@ -165,7 +165,7 @@ export function Player() {
     return () => {
       cancelled = true;
     };
-  }, [title?.id, title?.path, title?.source, title?.sourceLabel, nodeToken, nodeUrl, plexClient, sources, fit]);
+  }, [title?.id, title?.path, title?.source, title?.sourceLabel, nodeToken, nodeUrl, plexClient, sources, fit, title]);
 
   useEffect(() => {
     const video = videoRef.current;
