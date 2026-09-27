@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 "use strict";
 
 const http = require("node:http");
@@ -410,17 +411,6 @@ async function fetchJson(url, headers) {
     throw new Error(data.error || data.message || `Server returned ${res.status}`);
   }
   return data;
-}
-
-async function jellyAuth(conn) {
-  if (conn.accessToken && conn.userId) return conn;
-  const data = await fetchJson(`${conn.baseUrl}/Users/AuthenticateByName`, {
-    "Content-Type": "application/json",
-    "X-Emby-Authorization":
-      'MediaBrowser Client="CINEVO", Device="Node", DeviceId="cinevo-node", Version="0.1.0"',
-  });
-  // AuthenticateByName needs POST body — handle separately
-  return conn;
 }
 
 async function jellyLogin(conn) {

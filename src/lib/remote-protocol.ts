@@ -21,7 +21,9 @@ export type RemoteNow = {
   titles: RemoteTitle[];
 };
 
-const CONTROL = /[\u0000-\u001f]/g;
+// Control-character sanitization intentionally uses a low-level character range.
+// eslint-disable-next-line no-control-regex
+const CONTROL = /[\x00-\x1f]/g;
 
 export function normalizeCode(input: unknown): string {
   const raw = String(input ?? "")

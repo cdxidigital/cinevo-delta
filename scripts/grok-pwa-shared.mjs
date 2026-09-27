@@ -158,13 +158,17 @@ export function renderInstallPageHtml(template, { host, url } = {}) {
 }
 
 export function renderWebManifest(hostHeader) {
-  const name = appNameFromHost(hostHeader);
+  const siteName = String(readOgSite().title ?? "").trim();
+  const name = appNameFromHost(hostHeader) === DEFAULT_APP_NAME
+    ? siteName || DEFAULT_APP_NAME
+    : appNameFromHost(hostHeader);
+  const isPreview = appNameFromHost(hostHeader) === DEFAULT_APP_NAME;
   return JSON.stringify(
     {
       name,
       short_name: name,
-      id: "/",
-      start_url: "/",
+      id: isPreview ? "/app" : "/",
+      start_url: isPreview ? "/app" : "/",
       scope: "/",
       display: "standalone",
       background_color: "#000000",
@@ -175,6 +179,12 @@ export function renderWebManifest(hostHeader) {
           sizes: "180x180",
           type: "image/png",
         },
+        ...(isPreview
+          ? [
+              { src: "/__grok/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+              { src: "/__grok/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+            ]
+          : []),
       ],
     },
     null,
@@ -303,14 +313,15 @@ export function resolveOgTitle(
   host = "",
   documentTitle = "",
 ) {
-  const fromSite = String(site.title ?? "").trim();
-  if (fromSite) return fromSite;
   const fromDoc = String(documentTitle ?? "").trim();
   if (fromDoc) return fromDoc;
-  const fromHost = appNameFromHost(host);
-  if (fromHost && fromHost !== DEFAULT_APP_NAME) return fromHost;
   const fromArg = String(appName ?? "").trim();
-  return fromArg || DEFAULT_APP_NAME;
+  const fromHost = appNameFromHost(host);
+  const fromSite = String(site.title ?? "").trim();
+  if (fromSite && fromSite !== "CINEVO") return fromSite;
+  if (fromArg && fromArg !== DEFAULT_APP_NAME) return fromArg;
+  if (fromHost && fromHost !== DEFAULT_APP_NAME) return fromHost;
+  return fromSite || fromArg || DEFAULT_APP_NAME;
 }
 
 export function siteHasCustomCard(site = {}) {
